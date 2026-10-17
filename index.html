@@ -85,8 +85,11 @@
   </defs>
 </svg>
 
-<!-- A CASA -->
-<svg id="mundo" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" role="img" aria-label="A casa da vovó"></svg>
+<!-- A CASA: a cena 3D fica atrás; as pessoas e os bichos (2D) ficam por cima -->
+<div class="palco">
+  <canvas id="cena3d" aria-hidden="true"></canvas>
+  <svg id="mundo" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" role="img" aria-label="A casa da vovó"></svg>
+</div>
 <div class="balao" id="balao" aria-live="polite"></div>
 <div id="soneca" aria-hidden="true"></div>
 
@@ -164,6 +167,8 @@
 <script src="js/itens.js"></script>
 <script src="js/falas.js"></script>
 <script src="js/casa.js"></script>
+<script src="js/lib/three.min.js"></script>
+<script src="js/casa3d.js"></script>
 <script src="js/editor.js"></script>
 <script src="js/jogo.js"></script>
 </body>

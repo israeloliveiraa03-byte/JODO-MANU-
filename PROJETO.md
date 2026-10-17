@@ -93,5 +93,8 @@ Serviços com plano gratuito que fazem isso bem: Firebase (Google) ou Supabase. 
   andam mais devagar e plantas na frente que andam mais rápido (paralaxe).
 - Coisas que abrem e fecham com som: congelador com picolé, forno com bolo, armário da pia, guarda-roupa com
   roupas para vestir, janelas com cortina ao vento e porta da frente automática.
+- **Cenário em 3D**: casa em corte com perspectiva de verdade, móveis com volume e sombreamento de desenho,
+  sol com sombras, nuvens e morros ao fundo, jardim na frente, lâmpadas que acendem à noite e vaga-lumes.
+  Portas, tampas e janelas giram nas dobradiças. As pessoas e os bichos continuam em 2D por cima da cena.
 - Emoções: as pessoas piscam, olham para o que acontece e mudam o rosto (alegre, rindo, surpresa, carinho,
   sono, curiosa, atenta) conforme a brincadeira; dançam com o rádio e bocejam de noite.

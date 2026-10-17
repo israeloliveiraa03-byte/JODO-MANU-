@@ -1,5 +1,8 @@
 /* =========================================================
-   casa.js — A CASA DA VOVÓ (os desenhos)
+   casa.js — A CASA DA VOVÓ (medidas e desenhos 2D)
+   O cenário em si é 3D (veja casa3d.js). Aqui ficam as medidas da casa,
+   onde fica cada coisa, e os desenhos 2D que andam por cima da cena 3D:
+   os bichos, as cenouras e as roupas do guarda-roupa.
 
    A casa é vista "em corte", como uma casinha de bonecas aberta.
    O mundo tem 4000 de largura:
@@ -43,167 +46,14 @@ const VAGAS = {
 const FRUTAS_ARVORE = [[196, 262], [298, 230], [258, 314]];
 const CENOURAS_HORTA = [610, 676, 742];
 
-/* ---------- pedacinhos reaproveitados ---------- */
-function janelaCasa(x, y, w, h, corCortina) {
-  const meio = (w - 20) / 2;
-  return `<g data-coisa="janela" class="janela">
-    <path d="M${x + 14} ${y + h} L${x + w - 14} ${y + h} L${x + w + 70} 492 L${x - 30} 492 Z" fill="url(#raioSol)"/>
-    <rect x="${x + 5}" y="${y + 8}" width="${w}" height="${h}" rx="10" fill="#1a0f14" fill-opacity=".07"/>
-    ${profundidade(x, y, w, h, "#fbf8f2", 8)}
-    ${vol(`rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10"`, "#fbf8f2", "volSuave")}
-    <rect x="${x + 10}" y="${y + 10}" width="${w - 20}" height="${h - 20}" rx="5" fill="#cfe5f1"/>
-    <ellipse cx="${x + w * .3}" cy="${y + h - 26}" rx="${w * .35}" ry="18" fill="#bcd8a4"/>
-    <g class="vidro-e"><rect x="${x + 10}" y="${y + 10}" width="${meio}" height="${h - 20}" rx="5" fill="url(#vidro)"/>
-      <rect x="${x + 10}" y="${y + 10}" width="${meio}" height="${h - 20}" rx="5" fill="none" stroke="#fbf8f2" stroke-width="5"/></g>
-    <g class="vidro-d"><rect x="${x + 10 + meio}" y="${y + 10}" width="${meio}" height="${h - 20}" rx="5" fill="url(#vidro)"/>
-      <rect x="${x + 10 + meio}" y="${y + 10}" width="${meio}" height="${h - 20}" rx="5" fill="none" stroke="#fbf8f2" stroke-width="5"/></g>
-    <g class="cortina-e">${vol(`path d="M${x - 8} ${y - 6} Q${x + 18} ${y + h * .5} ${x + 4} ${y + h + 6} L${x - 14} ${y + h + 6} L${x - 14} ${y - 6} Z"`, corCortina, "volSuave")}</g>
-    <g class="cortina-d">${vol(`path d="M${x + w + 8} ${y - 6} Q${x + w - 18} ${y + h * .5} ${x + w - 4} ${y + h + 6} L${x + w + 14} ${y + h + 6} L${x + w + 14} ${y - 6} Z"`, corCortina, "volSuave")}</g>
-    ${vol(`rect x="${x - 22}" y="${y - 12}" width="${w + 44}" height="8" rx="4"`, "#b58a62", "cil")}
-  </g>`;
-}
-
-/* Profundidade: o tampo (em cima) e a lateral (à direita) de um móvel,
-   como se a gente visse a casa um pouquinho de cima e de lado. */
-function profundidade(x, y, w, h, cor, d = 12) {
-  return `<path d="M${x + 4} ${y} L${x + d + 4} ${y - d} L${x + w + d} ${y - d} L${x + w} ${y} Z" fill="${clarear(cor, .22)}"/>` +
-         `<path d="M${x + w} ${y + 2} L${x + w + d} ${y - d + 2} L${x + w + d} ${y + h - d} L${x + w} ${y + h - 2} Z" fill="${escurecer(cor, .16)}"/>`;
-}
-
+/* sombrinha embaixo dos bichos */
 function sombraNoChao(x, rx, y = 502) {
   return `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${n1(rx * .12 + 4)}" fill="url(#sombraChao)"/>`;
 }
 
-/* ---------- o céu, o chão e o telhado ----------
-   O céu e os morros ficam numa camada "longe", que anda mais devagar que a casa
-   quando a câmera se mexe (paralaxe): é isso que dá a sensação de profundidade. */
-function desenharLonge() {
-  let s = `<rect x="-6000" y="-3000" width="16000" height="3500" fill="url(#ceuDia)"/>`;
-  s += `<circle cx="-200" cy="-60" r="160" fill="url(#luzJanela)"/><circle cx="-200" cy="-60" r="50" fill="#fff1c4"/>`;
-  for (const [x, y, k] of [[200, -120, 1], [-900, 20, .8], [1500, -40, 1.1], [2300, -240, .9], [-1600, -200, .8], [600, 40, .7], [3100, 30, .9], [-400, -280, 1]]) {
-    s += `<g transform="translate(${x} ${y}) scale(${k})" fill="#fff" fill-opacity=".85">
-      <ellipse cx="0" cy="0" rx="70" ry="26"/><ellipse cx="34" cy="-16" rx="40" ry="26"/><ellipse cx="-30" cy="-10" rx="32" ry="20"/></g>`;
-  }
-  // duas fileiras de morros: os mais longe, mais clarinhos
-  for (let x = -3000, i = 0; x < 6000; x += 1100, i++) s += `<ellipse cx="${x}" cy="470" rx="${700 + (i % 3) * 120}" ry="${150 + (i % 2) * 40}" fill="#d7e6c8"/>`;
-  for (let x = -2600, i = 0; x < 6000; x += 900, i++) s += `<ellipse cx="${x}" cy="500" rx="${560 + (i % 2) * 140}" ry="${110 + (i % 3) * 20}" fill="#c9dcb5"/>`;
-  for (let x = -2400, i = 0; x < 6000; x += 520, i++) {
-    s += vol(`ellipse cx="${x}" cy="${430 - (i % 2) * 14}" rx="34" ry="44"`, "#b9d2a2", "volSuave") + `<rect x="${x - 4}" y="${460 - (i % 2) * 14}" width="8" height="26" fill="#b49a7c"/>`;
-  }
-  return s;
-}
-
-/* Plantas bem na frente da tela: andam mais rápido que a casa (paralaxe também) */
-function desenharFrente() {
+/* Os bichos que ficam no plano das pessoas (desenhados em 2D, por cima da cena 3D) */
+function desenharBichos() {
   let s = "";
-  for (let x = -1600, i = 0; x < 6000; x += 380, i++) {
-    const y = 640 + (i % 2) * 18, r = 54 + (i % 3) * 14, c = ["#94b97a", "#9cc183", "#a3c78a"][i % 3];
-    s += vol(`ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r * .62}"`, c, "volSuave");
-    s += vol(`ellipse cx="${x + r * .6}" cy="${y + 8}" rx="${r * .7}" ry="${r * .45}"`, c, "volSuave");
-    if (i % 2 === 0) s += `<circle cx="${x - 14}" cy="${y - r * .4}" r="7" fill="#f6dfe3"/><circle cx="${x + 18}" cy="${y - r * .5}" r="6" fill="#fff6dc"/><circle cx="${x + 2}" cy="${y - r * .55}" r="2.5" fill="#f2c46a"/>`;
-  }
-  return s;
-}
-
-function desenharCeuEChao() {
-  let s = "";
-  // grama e terra
-  s += `<rect x="-4000" y="488" width="12000" height="76" fill="#bcd69f"/>`;
-  s += `<rect x="-4000" y="488" width="12000" height="10" fill="#a9c78c" fill-opacity=".6"/>`;
-  // jardim da frente (aparece com o celular em pé)
-  s += `<rect x="-4000" y="560" width="12000" height="3000" fill="#b3cf96"/>`;
-  s += `<rect x="-4000" y="560" width="12000" height="18" fill="#a3c287"/>`;
-  for (let x = -3900, i = 0; x < 8000; x += 170, i++) {
-    const y = 660 + (i % 3) * 34;
-    s += vol(`ellipse cx="${x}" cy="${y}" rx="${46 + (i % 2) * 14}" ry="28"`, i % 2 ? "#9fc184" : "#a7c78b", "volSuave");
-    if (i % 2 === 0) s += `<circle cx="${x - 18}" cy="${y - 14}" r="5" fill="#f3d6dc"/><circle cx="${x + 12}" cy="${y - 20}" r="5" fill="#fbf3dc"/><circle cx="${x + 26}" cy="${y - 6}" r="4.5" fill="#f3d6dc"/>`;
-  }
-  s += `<path d="M960 566 Q900 760 980 1100 L1060 1100 Q990 760 1030 566 Z" fill="#e3d2b4"/>`;
-  return s;
-}
-
-function desenharTelhado() {
-  let s = `<path d="M960 94 L1190 -44 L3810 -44 L4040 94 Z" fill="#1a0f14" fill-opacity=".08" transform="translate(6 8)"/>`;
-  s += vol(`path d="M960 94 L1190 -44 L3810 -44 L4040 94 Z"`, "#c98a6e", "volSuave");
-  for (let y = -26, i = 0; y < 90; y += 24, i++) {
-    const dx = (y + 44) * (230 / 138);
-    let d = `M${n1(1190 - dx)} ${y}`;
-    for (let x = 1190 - dx + (i % 2) * 20; x < 3810 + dx - 40; x += 40) d += ` q20 12 40 0`;
-    s += `<path d="${d}" stroke="#b5755a" stroke-width="2.5" fill="none" stroke-opacity=".6"/>`;
-  }
-  // chaminé com fumacinha lenta
-  s += vol(`rect x="2600" y="-120" width="64" height="86" rx="6"`, "#b8735a", "volSuave");
-  s += vol(`rect x="2592" y="-130" width="80" height="16" rx="6"`, "#a8664e", "volSuave");
-  s += `<g class="fumaca" fill="#fff"><circle cx="2632" cy="-150" r="14"/><circle cx="2646" cy="-150" r="10"/></g>`;
-  return s;
-}
-
-/* ---------- o quintal ---------- */
-function desenharQuintal() {
-  let s = "";
-  // cerca
-  for (let x = -742; x < 990; x += 56) s += vol(`path d="M${x - 9} 492 L${x - 9} 412 L${x} 400 L${x + 9} 412 L${x + 9} 492 Z"`, "#f3eee4", "volSuave");
-  s += vol(`rect x="-756" y="424" width="1742" height="10" rx="4"`, "#ece5d8", "cil") + vol(`rect x="-756" y="462" width="1742" height="10" rx="4"`, "#ece5d8", "cil");
-
-  // laguinho com o pato
-  s += `<g data-coisa="pato">
-    <rect x="-560" y="430" width="250" height="100" fill="#fff" fill-opacity="0"/>
-    ${vol(`ellipse cx="-430" cy="514" rx="128" ry="24"`, "#9ccbdc", "volSuave")}
-    <ellipse cx="-430" cy="512" rx="104" ry="15" fill="#b7dbe7"/>
-    <path d="M-470 512 q14 -4 28 0 M-400 518 q14 -4 28 0" stroke="#fff" stroke-opacity=".7" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    ${[-548, -538, -318].map((x, i) => `<path d="M${x} 512 Q${x - 4} ${470 - i * 8} ${x + 2} ${452 - i * 6}" stroke="#7fae6a" stroke-width="4" fill="none" stroke-linecap="round"/>`).join("")}
-    <g transform="translate(-440 512)"><g class="pato">
-      ${vol(`ellipse cx="0" cy="-16" rx="30" ry="17"`, "#fbf6e8")}
-      ${vol(`path d="M-30 -20 L-42 -30 L-28 -12 Z"`, "#f3ecd9")}
-      ${vol(`circle cx="20" cy="-40" r="13"`, "#fbf6e8")}
-      ${vol(`path d="M31 -40 Q44 -38 44 -34 Q36 -32 30 -34 Z"`, "#f2a23a")}
-      <circle cx="23" cy="-43" r="2.4" fill="#2a1a12"/>
-      <path d="M-14 -20 Q0 -10 14 -18" stroke="#ebe2cb" stroke-width="3" fill="none" stroke-linecap="round"/>
-    </g></g>
-  </g>`;
-
-  // casinha do cachorro
-  s += `<g>${sombraNoChao(-250, 70)}
-    ${vol(`rect x="-310" y="430" width="120" height="70" rx="6"`, "#d9b38c", "volSuave")}
-    ${vol(`path d="M-322 436 L-250 380 L-178 436 Z"`, "#c98a6e", "volSuave")}
-    <path d="M-272 500 L-272 468 Q-250 446 -228 468 L-228 500 Z" fill="#6b4a36"/>
-    <rect x="-276" y="418" width="52" height="12" rx="4" fill="#fbf6ee"/>
-    <text x="-250" y="428" text-anchor="middle" font-family="Baloo 2, Trebuchet MS, sans-serif" font-weight="800" font-size="10" fill="#8a6a55">CARAMELO</text>
-  </g>`;
-
-  // passarinhos na cerca
-  s += `<g data-coisa="passaros">
-    <rect x="-110" y="350" width="150" height="70" fill="#fff" fill-opacity="0"/>
-    ${[[-70, 400, "#e88f7a"], [0, 402, "#7fb0d8"]].map(([x, y, c], i) => `<g transform="translate(${x} ${y})"><g class="ave ave-${i}">
-      ${vol(`ellipse cx="0" cy="-12" rx="14" ry="11"`, c)}
-      ${vol(`circle cx="10" cy="-24" r="8"`, c)}
-      <path d="M17 -25 L24 -23 L17 -21 Z" fill="#f2b630"/>
-      <circle cx="12" cy="-26" r="1.6" fill="#2a1a12"/>
-      ${vol(`path d="M-4 -16 Q-12 -26 -18 -12 Q-10 -10 -4 -16 Z"`, clarear(c, .25))}
-      <path d="M-12 -8 L-22 -4" stroke="${c}" stroke-width="4" stroke-linecap="round"/>
-    </g></g>`).join("")}
-  </g>`;
-
-  // mangueira
-  s += `<g data-coisa="arvore" class="arvore">
-    <rect x="110" y="80" width="300" height="420" fill="#fff" fill-opacity="0"/>
-    ${sombraNoChao(262, 130)}
-    ${vol(`path d="M236 500 C244 420 240 360 222 300 L250 296 C262 340 268 300 300 280 L312 292 C284 320 276 380 284 500 Z"`, "#9a6a46", "cil")}
-    <g class="copa">
-      ${vol(`circle cx="170" cy="270" r="76"`, "#86b072")}${vol(`circle cx="352" cy="268" r="80"`, "#86b072")}
-      ${vol(`circle cx="222" cy="164" r="72"`, "#8fb97a")}${vol(`circle cx="312" cy="172" r="74"`, "#8fb97a")}
-      ${vol(`circle cx="262" cy="236" r="104"`, "#93bd7e")}
-      <g id="frutas-arvore"></g>
-    </g>
-  </g>`;
-
-  // horta
-  s += `<g data-coisa="horta">
-    <rect x="560" y="420" width="230" height="100" fill="#fff" fill-opacity="0"/>
-    ${vol(`rect x="566" y="482" width="216" height="24" rx="10"`, "#9a7454", "volSuave")}
-    <g id="cenouras"></g>
-  </g>`;
-
   // galinha
   s += `<g data-coisa="galinha" transform="translate(880 500)">
     <rect x="-50" y="-90" width="100" height="92" fill="#fff" fill-opacity="0"/>
@@ -220,90 +70,19 @@ function desenharQuintal() {
       <path d="M-12 -36 Q0 -24 12 -34" stroke="#e8e1d2" stroke-width="3" fill="none" stroke-linecap="round"/>
     </g>
   </g>`;
-  return s;
-}
-
-/* ---------- a casa por dentro ---------- */
-function desenharParedes() {
-  let s = "";
-  // sala: verde-sálvia com listras bem suaves
-  s += `<rect x="1000" y="${MUNDO.teto}" width="1000" height="${488 - MUNDO.teto}" fill="#dfe7d5"/>`;
-  for (let x = 1020; x < 2000; x += 44) s += `<rect x="${x}" y="${MUNDO.teto}" width="16" height="${488 - MUNDO.teto}" fill="#e8eee0"/>`;
-  // cozinha: creme em cima, azulejo embaixo
-  s += `<rect x="2000" y="${MUNDO.teto}" width="1000" height="${488 - MUNDO.teto}" fill="#f4ecdc"/>`;
-  s += `<rect x="2000" y="356" width="1000" height="132" fill="#e6eff0"/>`;
-  for (let x = 2000; x <= 3000; x += 33) s += `<line x1="${x}" y1="356" x2="${x}" y2="488" stroke="#fff" stroke-width="2"/>`;
-  for (let y = 356; y <= 488; y += 33) s += `<line x1="2000" y1="${y}" x2="3000" y2="${y}" stroke="#fff" stroke-width="2"/>`;
-  // quarto: rosa-antigo com bolinhas
-  s += `<rect x="3000" y="${MUNDO.teto}" width="1000" height="${488 - MUNDO.teto}" fill="#f1e3e0"/>`;
-  for (let y = 140, l = 0; y < 480; y += 46, l++) for (let x = 3020 + (l % 2) * 23; x < 4000; x += 46) s += `<circle cx="${x}" cy="${y}" r="2.6" fill="#e6cfcb"/>`;
-  // sombra suave embaixo do teto
-  s += `<rect x="1000" y="${MUNDO.teto}" width="3000" height="40" fill="url(#sombraTeto)"/>`;
-  // rodapé
-  s += `<rect x="1000" y="472" width="3000" height="16" fill="#f6f2ea"/>`;
-  // piso de madeira
-  s += `<rect x="1000" y="488" width="3000" height="72" fill="#d8ab78"/>`;
-  for (const y of [506, 524, 542]) s += `<line x1="1000" y1="${y}" x2="4000" y2="${y}" stroke="#c4935f" stroke-width="2" stroke-opacity=".6"/>`;
-  s += `<rect x="1000" y="488" width="3000" height="8" fill="#1a0f14" fill-opacity=".06"/>`;
-  s += vol(`rect x="992" y="556" width="3016" height="12" rx="3"`, "#b98a5a", "cil");
-  s += vol(`rect x="996" y="566" width="3008" height="44" rx="4"`, "#d3bba0", "volSuave");
-  for (let x = 1040; x < 4000; x += 120) s += `<rect x="${x}" y="576" width="80" height="24" rx="5" fill="#c7ad8e" fill-opacity=".6"/>`;
-  return s;
-}
-
-function desenharEstrutura() {
-  // laje do teto, paredes cortadas e vãos das portas
-  let s = vol(`rect x="986" y="90" width="3028" height="24" rx="4"`, "#d2a679", "cil");
-  s += vol(`rect x="986" y="90" width="30" height="160" rx="4"`, "#e8d9c2", "cil");     // parede do quintal (porta embaixo)
-  s += vol(`rect x="986" y="488" width="30" height="78" rx="4"`, "#e8d9c2", "cil");
-  // porta da frente: abre sozinha quando alguém chega perto
-  s += `<g class="porta-frente" id="porta-frente">
-    ${vol(`rect x="1016" y="252" width="86" height="236" rx="6"`, "#b98458", "volSuave")}
-    ${vol(`rect x="1028" y="266" width="62" height="88" rx="5"`, "#c99668", "volSuave")}${vol(`rect x="1028" y="370" width="62" height="104" rx="5"`, "#c99668", "volSuave")}
-    ${vol(`circle cx="1090" cy="380" r="6"`, "#f2c46a")}
+  // passarinhos na cerca
+  s += `<g data-coisa="passaros">
+    <rect x="-110" y="350" width="150" height="70" fill="#fff" fill-opacity="0"/>
+    ${[[-70, 400, "#e88f7a"], [0, 402, "#7fb0d8"]].map(([x, y, c], i) => `<g transform="translate(${x} ${y})"><g class="ave ave-${i}">
+      ${vol(`ellipse cx="0" cy="-12" rx="14" ry="11"`, c)}
+      ${vol(`circle cx="10" cy="-24" r="8"`, c)}
+      <path d="M17 -25 L24 -23 L17 -21 Z" fill="#f2b630"/>
+      <circle cx="12" cy="-26" r="1.6" fill="#2a1a12"/>
+      ${vol(`path d="M-4 -16 Q-12 -26 -18 -12 Q-10 -10 -4 -16 Z"`, clarear(c, .25))}
+      <path d="M-12 -8 L-22 -4" stroke="${c}" stroke-width="4" stroke-linecap="round"/>
+    </g></g>`).join("")}
   </g>`;
-  s += vol(`rect x="3984" y="90" width="30" height="476" rx="4"`, "#e8d9c2", "cil");    // parede do fundo
-  for (const x of [2000, 3000]) s += vol(`rect x="${x - 13}" y="112" width="26" height="128" rx="4"`, "#e8d9c2", "cil");
-  return s;
-}
 
-function retratos(fichas) {
-  const pessoas = ["manu", "vovo", "vovoo"];
-  return `<g data-coisa="quadro">` + pessoas.map((id, i) => {
-    const x = 1196 + i * 94, y = 186;
-    return `<g data-quem="${id}">
-      <rect x="${x - 34}" y="${y + 6}" width="76" height="86" rx="8" fill="#1a0f14" fill-opacity=".08"/>
-      ${vol(`rect x="${x - 38}" y="${y}" width="76" height="86" rx="8"`, "#c49a6c", "volSuave")}
-      <rect x="${x - 30}" y="${y + 8}" width="60" height="70" rx="4" fill="#f7efe2"/>
-      <svg x="${x - 30}" y="${y + 8}" width="60" height="70" viewBox="${recorteDe("rosto", fichas[id])}">${desenharAvatar(fichas[id], { sombra: false })}</svg>
-    </g>`;
-  }).join("") + `</g>`;
-}
-
-function desenharSala(fichas) {
-  let s = janelaCasa(1494, 168, 150, 156, "#c8d6b8");
-  s += retratos(fichas);
-  // sofá
-  s += `<g data-coisa="sofa">${sombraNoChao(1290, 150)}
-    ${vol(`rect x="1168" y="372" width="244" height="90" rx="30"`, "#a9bccb", "volSuave")}
-    ${vol(`rect x="1176" y="432" width="228" height="48" rx="18"`, "#b6c8d5", "volSuave")}
-    ${vol(`rect x="1146" y="410" width="44" height="76" rx="20"`, "#9fb3c3", "volSuave")}${vol(`rect x="1390" y="410" width="44" height="76" rx="20"`, "#9fb3c3", "volSuave")}
-    ${vol(`rect x="1200" y="396" width="64" height="44" rx="14"`, "#e9d6b9", "volSuave")}${vol(`rect x="1316" y="396" width="64" height="44" rx="14"`, "#e3c4c0", "volSuave")}
-    <rect x="1170" y="484" width="10" height="16" rx="3" fill="#8d6a4c"/><rect x="1400" y="484" width="10" height="16" rx="3" fill="#8d6a4c"/></g>`;
-  // tapete
-  s += `<ellipse cx="1500" cy="514" rx="170" ry="22" fill="#e8cdb6"/><ellipse cx="1500" cy="514" rx="150" ry="16" fill="none" stroke="#f3e2d3" stroke-width="3" stroke-dasharray="8 7"/>`;
-  // mesinha com rádio
-  s += `<g data-coisa="radio">${sombraNoChao(1580, 46)}
-    <rect x="1520" y="340" width="120" height="160" fill="#fff" fill-opacity="0"/>
-    ${vol(`rect x="1536" y="436" width="88" height="12" rx="5"`, "#b58a62", "cil")}
-    ${vol(`rect x="1546" y="446" width="10" height="54" rx="4"`, "#a87d56", "cil")}${vol(`rect x="1604" y="446" width="10" height="54" rx="4"`, "#a87d56", "cil")}
-    ${profundidade(1546, 390, 68, 46, "#c98a6e", 9)}
-    ${vol(`rect x="1546" y="390" width="68" height="46" rx="12"`, "#c98a6e", "volSuave")}
-    <circle cx="1566" cy="413" r="13" fill="#e9d6b9"/>
-    <path d="M1557 407 h18 M1555 413 h22 M1557 419 h18" stroke="#c9b08e" stroke-width="2" stroke-linecap="round"/>
-    ${vol(`circle cx="1596" cy="406" r="6"`, "#f3e7c9")}${vol(`circle cx="1596" cy="422" r="6"`, "#f3e7c9")}
-    <path d="M1594 390 L1606 362" stroke="#8d6a4c" stroke-width="2.5" stroke-linecap="round"/>
-    <g class="notas" fill="#8a7bb8"><text x="1612" y="380" font-size="22">♪</text><text x="1630" y="360" font-size="18">♫</text></g></g>`;
   // gato dormindo no tapete
   s += `<g data-coisa="gato" transform="translate(1700 512)">
     <rect x="-56" y="-56" width="112" height="60" fill="#fff" fill-opacity="0"/>
@@ -318,196 +97,32 @@ function desenharSala(fichas) {
       <g class="olho-aberto"><circle cx="-38" cy="-28" r="3.5" fill="#5f9c3c"/><circle cx="-22" cy="-28" r="3.5" fill="#5f9c3c"/></g>
       <path d="M-32 -20 L-28 -20 L-30 -17 Z" fill="#e0707f"/>
     </g></g>`;
-  // baú de brinquedos
-  s += `<g data-lugar="bau" id="bau" class="bau">
-    ${sombraNoChao(1880, 80)}
-    <rect x="1796" y="380" width="168" height="124" fill="#fff" fill-opacity="0"/>
-    ${profundidade(1808, 444, 144, 58, "#b98458", 12)}
-    <rect x="1812" y="430" width="136" height="70" rx="8" fill="#7a5236"/>
-    <g id="dentro-bau"></g>
-    ${vol(`rect x="1808" y="444" width="144" height="58" rx="10"`, "#b98458", "volSuave")}
-    <rect x="1808" y="458" width="144" height="6" fill="#9a6a46" fill-opacity=".5"/>
-    ${vol(`rect x="1868" y="452" width="24" height="18" rx="5"`, "#e8c46a")}
-    <g class="tampa-bau">${vol(`path d="M1804 446 L1804 428 Q1804 410 1824 410 L1936 410 Q1956 410 1956 428 L1956 446 Z"`, "#c48f62", "volSuave")}
-      <rect x="1804" y="434" width="152" height="5" fill="#9a6a46" fill-opacity=".45"/></g>
+  // pato no laguinho
+  s += `<g data-coisa="pato">
+    <g transform="translate(-440 512)"><g class="pato">
+      ${vol(`ellipse cx="0" cy="-16" rx="30" ry="17"`, "#fbf6e8")}
+      ${vol(`path d="M-30 -20 L-42 -30 L-28 -12 Z"`, "#f3ecd9")}
+      ${vol(`circle cx="20" cy="-40" r="13"`, "#fbf6e8")}
+      ${vol(`path d="M31 -40 Q44 -38 44 -34 Q36 -32 30 -34 Z"`, "#f2a23a")}
+      <circle cx="23" cy="-43" r="2.4" fill="#2a1a12"/>
+      <path d="M-14 -20 Q0 -10 14 -18" stroke="#ebe2cb" stroke-width="3" fill="none" stroke-linecap="round"/>
+    </g></g>
   </g>`;
+  // coruja no galho da mangueira
+  s += `<g class="coruja-toque" data-coisa="coruja" transform="translate(300 300)">
+    <rect x="-34" y="-64" width="68" height="70" fill="#fff" fill-opacity="0"/>
+    <g class="coruja">
+      ${vol('ellipse cx="0" cy="-26" rx="22" ry="26"', "#9a7a5c")}
+      ${vol('ellipse cx="0" cy="-18" rx="14" ry="16"', "#c9ad8c")}
+      <path d="M-18 -46 L-14 -60 L-6 -48 Z M18 -46 L14 -60 L6 -48 Z" fill="#8a6a4e"/>
+      <circle cx="-9" cy="-38" r="8" fill="#fff8e0"/><circle cx="9" cy="-38" r="8" fill="#fff8e0"/>
+      <circle cx="-9" cy="-38" r="4" fill="#2a1a12"/><circle cx="9" cy="-38" r="4" fill="#2a1a12"/>
+      <path d="M-3 -30 L3 -30 L0 -24 Z" fill="#f2b630"/>
+      <path d="M-30 2 L30 2" stroke="#9a6a46" stroke-width="7" stroke-linecap="round"/>
+    </g></g>`;
+  // cenouras da horta
+  s += `<g data-coisa="horta"><g id="cenouras"></g></g>`;
   return s;
-}
-
-function desenharCozinha() {
-  let s = janelaCasa(2330, 178, 140, 136, "#e9b7a8");
-  // filtro de barro
-  s += `<g data-coisa="filtro">${sombraNoChao(2066, 40)}
-    <rect x="2020" y="330" width="96" height="172" fill="#fff" fill-opacity="0"/>
-    ${vol(`rect x="2030" y="434" width="72" height="10" rx="4"`, "#b58a62", "cil")}
-    ${vol(`rect x="2038" y="444" width="10" height="56" rx="4"`, "#a87d56", "cil")}${vol(`rect x="2084" y="444" width="10" height="56" rx="4"`, "#a87d56", "cil")}
-    ${vol(`ellipse cx="2066" cy="404" rx="30" ry="30"`, "#c47a58")}
-    ${vol(`ellipse cx="2066" cy="358" rx="25" ry="24"`, "#cc8462")}
-    ${vol(`ellipse cx="2066" cy="334" rx="14" ry="6"`, "#b8714f")}
-    <path d="M2034 382 Q2066 392 2098 382" stroke="#a8634a" stroke-width="3" fill="none"/>
-    ${vol(`rect x="2088" y="410" width="16" height="7" rx="3"`, "#9fb3c3")}
-    <g class="gota"><path d="M2102 420 q-4 7 0 9 q4 -2 0 -9 Z" fill="#8fc3e6"/></g></g>`;
-  // geladeira
-  s += `<g data-lugar="geladeira" id="geladeira" class="geladeira">
-    ${sombraNoChao(2190, 84)}
-    <rect x="2116" y="220" width="148" height="284" fill="#fff" fill-opacity="0"/>
-    ${profundidade(2124, 226, 132, 274, "#c9e2d7", 14)}
-    ${vol(`rect x="2120" y="226" width="140" height="274" rx="24"`, "#c9e2d7", "volSuave")}
-    <rect x="2130" y="300" width="120" height="194" rx="8" fill="#f6fbf9"/>
-    <rect x="2130" y="300" width="120" height="30" fill="#e3f0ea"/>
-    ${[358, 426].map(y => `<rect x="2134" y="${y}" width="112" height="5" rx="2" fill="#d5e7df"/>`).join("")}
-    <g id="dentro-geladeira"></g>
-    <rect x="2130" y="234" width="120" height="58" rx="8" fill="#e8f4fb"/>
-    <g id="dentro-freezer"></g>
-    <g class="porta-freezer" data-coisa="freezer">
-      ${vol(`path d="M2120 296 L2120 250 Q2120 226 2144 226 L2236 226 Q2260 226 2260 250 L2260 296 Z"`, "#cfe6dc", "volSuave")}
-      ${vol(`rect x="2134" y="248" width="8" height="34" rx="4"`, "#eef6f2", "cil")}
-    </g>
-    <g class="porta-geladeira">
-      ${vol(`path d="M2120 300 L2260 300 L2260 478 Q2260 500 2238 500 L2142 500 Q2120 500 2120 478 Z"`, "#cfe6dc", "volSuave")}
-      ${vol(`rect x="2132" y="320" width="9" height="74" rx="4.5"`, "#eef6f2", "cil")}
-      <circle cx="2232" cy="324" r="7" fill="#f2b630" fill-opacity=".8"/>
-    </g>
-    <rect x="2132" y="498" width="14" height="6" rx="2" fill="#9aa9a2"/><rect x="2234" y="498" width="14" height="6" rx="2" fill="#9aa9a2"/>
-  </g>`;
-  // pia e armário
-  s += `<g data-coisa="pia">${sombraNoChao(2400, 110)}
-    <rect x="2296" y="360" width="208" height="142" fill="#fff" fill-opacity="0"/>
-    ${profundidade(2300, 418, 200, 82, "#efe4d1", 12)}
-    ${vol(`rect x="2300" y="418" width="200" height="82" rx="6"`, "#efe4d1", "volSuave")}
-    <rect x="2306" y="426" width="188" height="68" rx="5" fill="#8c7458"/>
-    <rect x="2306" y="458" width="188" height="4" fill="#6f5a44"/>
-    ${vol(`rect x="2322" y="434" width="44" height="24" rx="8"`, "#a9bccb", "volSuave")}${vol(`ellipse cx="2440" cy="452" rx="30" ry="8"`, "#e9b7a8")}
-    ${vol(`rect x="2408" y="466" width="60" height="24" rx="6"`, "#f2c46a", "volSuave")}
-    <g data-coisa="armarioPia">
-      <g class="porta-pia-e">${vol(`rect x="2306" y="426" width="92" height="68" rx="5"`, "#e6d8c1", "volSuave")}<circle cx="2388" cy="460" r="4" fill="#c4a882"/></g>
-      <g class="porta-pia-d">${vol(`rect x="2402" y="426" width="92" height="68" rx="5"`, "#e6d8c1", "volSuave")}<circle cx="2412" cy="460" r="4" fill="#c4a882"/></g>
-    </g>
-    ${profundidade(2294, 406, 212, 14, "#f7f4ef", 12)}
-    ${vol(`rect x="2294" y="406" width="212" height="14" rx="5"`, "#f7f4ef", "cil")}
-    <path d="M2360 408 Q2400 422 2440 408" stroke="#d8dfe2" stroke-width="5" fill="none"/>
-    <path d="M2392 408 L2392 376 Q2392 366 2404 366 L2416 366" stroke="#b9c4ca" stroke-width="7" fill="none" stroke-linecap="round"/>
-    <g class="agua"><rect x="2412" y="370" width="7" height="38" rx="3" fill="#a8d4ef" fill-opacity=".85"/></g></g>`;
-  // fogão com panela
-  s += `<g data-coisa="fogao">${sombraNoChao(2590, 70)}
-    <rect x="2526" y="330" width="128" height="172" fill="#fff" fill-opacity="0"/>
-    ${profundidade(2530, 398, 120, 102, "#f4f0ea", 12)}
-    ${vol(`rect x="2530" y="398" width="120" height="102" rx="10"`, "#f4f0ea", "volSuave")}
-    <rect x="2546" y="430" width="88" height="56" rx="8" fill="#5a3f34"/>
-    <rect class="brasa" x="2546" y="430" width="88" height="56" rx="8" fill="#f3a35a"/>
-    <rect x="2552" y="472" width="76" height="4" rx="2" fill="#2e2620" fill-opacity=".6"/>
-    <g id="dentro-forno"></g>
-    <g class="porta-forno" data-coisa="forno">
-      ${vol(`rect x="2542" y="426" width="96" height="62" rx="9"`, "#ece6dd", "volSuave")}
-      <rect x="2554" y="436" width="72" height="34" rx="6" fill="#3e3a44" fill-opacity=".75"/>
-      <rect x="2560" y="440" width="34" height="8" rx="4" fill="#fff" fill-opacity=".18"/>
-      ${vol(`rect x="2560" y="476" width="60" height="7" rx="3.5"`, "#c9c2b8", "cil")}
-    </g>
-    ${[2552, 2576, 2604, 2628].map(x => vol(`circle cx="${x}" cy="414" r="5"`, "#d9d2c8")).join("")}
-    ${vol(`rect x="2560" y="364" width="62" height="32" rx="10"`, "#a9bccb", "volSuave")}
-    ${vol(`rect x="2556" y="358" width="70" height="10" rx="5"`, "#9fb3c3", "cil")}
-    ${vol(`circle cx="2591" cy="352" r="6"`, "#8aa0b2")}
-    <g class="vapor" fill="#fff"><circle cx="2578" cy="336" r="9"/><circle cx="2600" cy="326" r="11"/><circle cx="2590" cy="306" r="8"/></g></g>`;
-  // mesa com toalha xadrez e fruteira
-  let xadrez = "";
-  for (let x = 2764; x < 2936; x += 16) for (let y = 420; y < 456; y += 16) if (((x - 2764) / 16 + (y - 420) / 16) % 2 === 0) xadrez += `<rect x="${x}" y="${y}" width="16" height="16" fill="#e7a99a" fill-opacity=".55"/>`;
-  s += `<g data-lugar="fruteira" id="fruteira">${sombraNoChao(2850, 100)}
-    <rect x="2756" y="350" width="190" height="152" fill="#fff" fill-opacity="0"/>
-    ${vol(`rect x="2776" y="440" width="12" height="60" rx="4"`, "#a87d56", "cil")}${vol(`rect x="2912" y="440" width="12" height="60" rx="4"`, "#a87d56", "cil")}
-    <path d="M2766 418 L2778 406 L2952 406 L2940 418 Z" fill="#fffaf2"/>
-    <path d="M2760 418 L2940 418 L2940 456 Q2850 468 2760 456 Z" fill="#fbf6ee"/>${xadrez}
-    <path d="M2760 418 L2940 418 L2940 456 Q2850 468 2760 456 Z" fill="url(#volSuave)"/>
-    <g id="dentro-fruteira"></g>
-    ${vol(`path d="M2814 400 L2886 400 Q2882 418 2850 420 Q2818 418 2814 400 Z"`, "#f1ece2")}
-    ${vol(`rect x="2838" y="417" width="24" height="4" rx="2"`, "#e2dacb")}</g>`;
-  return s;
-}
-
-function desenharQuarto() {
-  let s = janelaCasa(3404, 176, 140, 128, "#e3c4c0");
-  // guarda-roupa
-  s += `<g data-coisa="armario" id="armario" class="armario">${sombraNoChao(3125, 84)}
-    ${profundidade(3050, 236, 150, 264, "#dcb894", 14)}
-    ${vol(`rect x="3050" y="236" width="150" height="264" rx="12"`, "#dcb894", "volSuave")}
-    <rect x="3058" y="246" width="134" height="244" rx="6" fill="#8c6a4c"/>
-    <rect x="3064" y="262" width="122" height="5" rx="2.5" fill="#d9c3a3"/>
-    ${roupaNoCabide(3086, "vestido", "#f2b630")}${roupaNoCabide(3125, "pijama", "#6aa8e8")}${roupaNoCabide(3164, "fada", "#3fb3a5")}
-    <g class="porta-armario-e">${vol(`rect x="3050" y="236" width="75" height="264" rx="10"`, "#dcb894", "volSuave")}${vol(`circle cx="3114" cy="370" r="5"`, "#f3e7c9")}</g>
-    <g class="porta-armario-d">${vol(`rect x="3125" y="236" width="75" height="264" rx="10"`, "#d6b18b", "volSuave")}${vol(`circle cx="3136" cy="370" r="5"`, "#f3e7c9")}</g>
-    ${vol(`rect x="3044" y="228" width="162" height="14" rx="5"`, "#c9a47e", "cil")}</g>`;
-  // planta
-  s += `<g data-coisa="planta">${sombraNoChao(3234, 36)}
-    ${vol(`path d="M3210 446 L3258 446 L3251 500 L3217 500 Z"`, "#c98a6e", "volSuave")}
-    ${vol(`path d="M3234 446 C3204 410 3196 376 3214 358 C3222 392 3230 410 3234 446 Z"`, "#7fae6a")}
-    ${vol(`path d="M3234 446 C3256 402 3274 376 3266 350 C3248 376 3240 410 3234 446 Z"`, "#8fb97a")}
-    ${vol(`path d="M3234 446 C3228 404 3236 368 3240 342 C3248 376 3246 410 3234 446 Z"`, "#86b072")}</g>`;
-  // tapete redondo
-  s += `<ellipse cx="3470" cy="516" rx="150" ry="18" fill="#e9d2cf"/>`;
-  // cama com colcha de crochê
-  let croche = "";
-  for (let x = 3360, i = 0; x < 3600; x += 30, i++) for (let y = 428; y < 470; y += 22) {
-    const c = ["#f2c2b6", "#bfd8c4", "#f3dc9a", "#c8d3ea"][(i + Math.round(y / 22)) % 4];
-    croche += `<circle cx="${x + (y % 44 ? 15 : 0)}" cy="${y}" r="7" fill="${c}"/><circle cx="${x + (y % 44 ? 15 : 0)}" cy="${y}" r="2.5" fill="#fffaf0"/>`;
-  }
-  s += `<g data-coisa="cama">${sombraNoChao(3470, 180)}
-    <rect x="3280" y="320" width="380" height="182" fill="#fff" fill-opacity="0"/>
-    ${vol(`rect x="3290" y="330" width="42" height="170" rx="16"`, "#b98458", "volSuave")}
-    ${vol(`rect x="3608" y="398" width="40" height="102" rx="14"`, "#b98458", "volSuave")}
-    ${profundidade(3310, 448, 320, 34, "#c48f62", 12)}
-    ${vol(`rect x="3310" y="448" width="320" height="34" rx="10"`, "#c48f62", "volSuave")}
-    ${vol(`ellipse cx="3376" cy="414" rx="44" ry="20"`, "#ffffff")}
-    ${vol(`path d="M3340 420 L3620 420 L3620 470 Q3480 482 3340 470 Z"`, "#f6eedc", "volSuave")}
-    ${croche}
-    <path d="M3340 470 Q3480 482 3620 470" stroke="#e8d7b8" stroke-width="5" fill="none" stroke-dasharray="2 8" stroke-linecap="round"/></g>`;
-  // criado-mudo e abajur
-  s += `<g data-coisa="abajur">${sombraNoChao(3730, 46)}
-    <rect x="3680" y="330" width="100" height="172" fill="#fff" fill-opacity="0"/>
-    <circle class="luz-abajur" cx="3730" cy="380" r="120" fill="url(#luzJanela)"/>
-    ${profundidade(3690, 432, 80, 68, "#c48f62", 10)}
-    ${vol(`rect x="3690" y="432" width="80" height="68" rx="8"`, "#c48f62", "volSuave")}
-    <rect x="3698" y="458" width="64" height="4" fill="#a87d56" fill-opacity=".6"/>
-    ${vol(`circle cx="3730" cy="474" r="4"`, "#f3e7c9")}
-    ${vol(`rect x="3722" y="404" width="16" height="28" rx="4"`, "#e8d9c2", "cil")}
-    ${vol(`path d="M3702 404 L3758 404 L3746 360 L3714 360 Z"`, "#f6d9a8", "volSuave")}</g>`;
-  return s;
-}
-
-/* Uma roupinha pendurada; tocar nela veste a Manu */
-function roupaNoCabide(x, roupa, cor) {
-  const corpo = roupa === "pijama"
-    ? vol(`path d="M${x - 15} 290 L${x + 15} 290 L${x + 17} 330 L${x + 12} 380 L${x + 2} 380 L${x} 340 L${x - 2} 380 L${x - 12} 380 L${x - 17} 330 Z"`, cor, "volSuave") +
-      `<circle cx="${x - 6}" cy="${306}" r="2.5" fill="#fff" fill-opacity=".8"/><circle cx="${x + 7}" cy="${322}" r="2.5" fill="#fff" fill-opacity=".8"/><circle cx="${x - 7}" cy="${354}" r="2.5" fill="#fff" fill-opacity=".8"/>`
-    : vol(`path d="M${x - 13} 290 L${x + 13} 290 L${x + 15} 312 L${x + 26} ${roupa === "fada" ? 360 : 352} L${x - 26} ${roupa === "fada" ? 360 : 352} L${x - 15} 312 Z"`, cor, "volSuave") +
-      (roupa === "fada" ? `<g fill="#e9e0ff" fill-opacity=".85"><ellipse cx="${x - 20}" cy="300" rx="12" ry="8"/><ellipse cx="${x + 20}" cy="300" rx="12" ry="8"/></g><polygon points="${pontosEstrela(x, 336, 5)}" fill="#fff"/>`
-        : `<circle cx="${x - 8}" cy="330" r="2" fill="${escurecer(cor, .25)}"/><circle cx="${x + 6}" cy="338" r="2" fill="${escurecer(cor, .25)}"/><circle cx="${x - 2}" cy="320" r="2" fill="${escurecer(cor, .25)}"/>`);
-  return `<g data-roupa="${roupa}">
-    <rect x="${x - 20}" y="262" width="40" height="124" fill="#fff" fill-opacity="0"/>
-    <path d="M${x} 264 q-5 -1 -4 6 M${x - 14} 288 L${x} 274 L${x + 14} 288" stroke="#cfc3b0" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    ${corpo}</g>`;
-}
-
-/* A casa inteira (só as partes que não mudam durante o jogo; o céu longe e as plantas da frente são camadas à parte) */
-function desenharCasa(fichas) {
-  return desenharCeuEChao() + desenharTelhado() + desenharParedes() + desenharQuintal() +
-    desenharSala(fichas) + desenharCozinha() + desenharQuarto() + desenharEstrutura();
-}
-
-/* ---------- partes que mudam ---------- */
-function desenharFrutasArvore(n) {
-  return FRUTAS_ARVORE.slice(0, n).map(([x, y]) => `<g transform="translate(${x} ${y + 40}) scale(.9)">${ITENS.manga.d()}</g>`).join("");
-}
-function desenharCenouras(horta) {
-  return horta.map((tem, i) => tem ? `<g data-vaga="${i}" transform="translate(${CENOURAS_HORTA[i]} 490)">
-      <circle cx="0" cy="-20" r="30" fill="#fff" fill-opacity="0"/>
-      ${vol('path d="M-9 0 Q0 -5 9 0 L6 6 L-6 6 Z"', "#f08a3c")}
-      ${vol('path d="M-2 -2 Q-14 -24 -8 -30 Q0 -18 0 -2 Z"', "#6aa65a")}${vol('path d="M2 -2 Q12 -26 18 -20 Q8 -14 2 -2 Z"', "#7cbb68")}${vol('path d="M0 -2 Q-2 -26 4 -32 Q6 -16 0 -2 Z"', "#86c070")}
-    </g>` : `<ellipse cx="${CENOURAS_HORTA[i]}" cy="490" rx="8" ry="3" fill="#7d5c40"/>`).join("");
-}
-function desenharDentro(lugar, itens) {
-  return itens.map(it => {
-    const [x, y, k] = VAGAS[lugar][it.vaga];
-    return `<g transform="translate(${x} ${y}) scale(${k})">${desenharItem(it.tipo, `data-item="${it.id}"`)}</g>`;
-  }).join("");
 }
 
 /* ---------- o cachorro (anda pelo quintal, por isso é desenhado à parte) ---------- */
@@ -530,40 +145,24 @@ function desenharCachorro() {
     </g>`;
 }
 
-/* ---------- a noite (uma camada por cima de tudo, que aparece devagar) ---------- */
-function desenharNoite() {
-  const ini = MUNDO.inicio;
-  let s = `<rect x="-6000" y="-4000" width="${1000 + 6000}" height="8000" fill="#16204a" fill-opacity=".55"/>`;
-  s += `<rect x="4000" y="-4000" width="8000" height="8000" fill="#16204a" fill-opacity=".55"/>`;
-  s += `<rect x="1000" y="-4000" width="3000" height="${4000 + 90}" fill="#16204a" fill-opacity=".5"/>`;
-  s += `<rect x="1000" y="566" width="3000" height="4000" fill="#16204a" fill-opacity=".5"/>`;
-  s += `<rect x="1000" y="90" width="3000" height="476" fill="#1d2550" fill-opacity=".16"/>`;
-  // janelas: lá fora está escuro, com estrelinhas
-  for (const [x, y, w, h] of [[1504, 178, 130, 136], [2340, 188, 120, 116], [3414, 186, 120, 108]]) {
-    s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="#1b2656" fill-opacity=".7"/>`;
-    s += `<polygon points="${pontosEstrela(x + w * .3, y + h * .3, 5)}" fill="#fff4c4"/><polygon points="${pontosEstrela(x + w * .7, y + h * .55, 4)}" fill="#fff4c4"/>`;
-  }
-  // luzinhas quentes dentro de casa
-  for (const [x, y, r] of [[1290, 200, 260], [2190, 210, 240], [2850, 260, 220], [3730, 380, 200]]) {
-    s += `<circle cx="${x}" cy="${y}" r="${r}" fill="url(#luzJanela)" opacity=".5"/>`;
-  }
-  // lua e estrelas (no céu do quintal e acima do telhado)
-  s += `<circle cx="680" cy="120" r="70" fill="url(#luzJanela)"/><circle cx="680" cy="120" r="34" fill="#fbf3cf"/>
-        <circle cx="694" cy="110" r="30" fill="#2a3466" fill-opacity=".9"/>`;
-  const estrelas = [[520, 60], [600, 210], [820, 70], [900, 230], [760, 300], [-120, 120], [-300, 60], [-520, 160], [-660, 80], [40, 50],
-                    [1400, -120], [1900, -200], [2300, -90], [2900, -240], [3400, -110], [3800, -200], [-200, -150], [600, -220]];
-  s += estrelas.map(([x, y], i) => `<polygon class="estrela-noite e${i % 3}" points="${pontosEstrela(x, y, 4 + (i % 3) * 2)}" fill="#fff4c4"/>`).join("");
-  // coruja no galho da mangueira
-  s += `<g class="coruja-toque" data-coisa="coruja" transform="translate(300 300)">
-    <rect x="-34" y="-64" width="68" height="70" fill="#fff" fill-opacity="0"/>
-    <g class="coruja">
-      ${vol('ellipse cx="0" cy="-26" rx="22" ry="26"', "#9a7a5c")}
-      ${vol('ellipse cx="0" cy="-18" rx="14" ry="16"', "#c9ad8c")}
-      <path d="M-18 -46 L-14 -60 L-6 -48 Z M18 -46 L14 -60 L6 -48 Z" fill="#8a6a4e"/>
-      <circle cx="-9" cy="-38" r="8" fill="#fff8e0"/><circle cx="9" cy="-38" r="8" fill="#fff8e0"/>
-      <circle cx="-9" cy="-38" r="4" fill="#2a1a12"/><circle cx="9" cy="-38" r="4" fill="#2a1a12"/>
-      <path d="M-3 -30 L3 -30 L0 -24 Z" fill="#f2b630"/>
-      <path d="M-30 2 L30 2" stroke="#9a6a46" stroke-width="7" stroke-linecap="round"/>
-    </g></g>`;
-  return s;
+function desenharCenouras(horta) {
+  return horta.map((tem, i) => tem ? `<g data-vaga="${i}" transform="translate(${CENOURAS_HORTA[i]} 490)">
+      <circle cx="0" cy="-20" r="30" fill="#fff" fill-opacity="0"/>
+      ${vol('path d="M-9 0 Q0 -5 9 0 L6 6 L-6 6 Z"', "#f08a3c")}
+      ${vol('path d="M-2 -2 Q-14 -24 -8 -30 Q0 -18 0 -2 Z"', "#6aa65a")}${vol('path d="M2 -2 Q12 -26 18 -20 Q8 -14 2 -2 Z"', "#7cbb68")}${vol('path d="M0 -2 Q-2 -26 4 -32 Q6 -16 0 -2 Z"', "#86c070")}
+    </g>` : `<ellipse cx="${CENOURAS_HORTA[i]}" cy="490" rx="8" ry="3" fill="#7d5c40"/>`).join("");
 }
+/* Uma roupinha pendurada; tocar nela veste a Manu */
+function roupaNoCabide(x, roupa, cor) {
+  const corpo = roupa === "pijama"
+    ? vol(`path d="M${x - 15} 290 L${x + 15} 290 L${x + 17} 330 L${x + 12} 380 L${x + 2} 380 L${x} 340 L${x - 2} 380 L${x - 12} 380 L${x - 17} 330 Z"`, cor, "volSuave") +
+      `<circle cx="${x - 6}" cy="${306}" r="2.5" fill="#fff" fill-opacity=".8"/><circle cx="${x + 7}" cy="${322}" r="2.5" fill="#fff" fill-opacity=".8"/><circle cx="${x - 7}" cy="${354}" r="2.5" fill="#fff" fill-opacity=".8"/>`
+    : vol(`path d="M${x - 13} 290 L${x + 13} 290 L${x + 15} 312 L${x + 26} ${roupa === "fada" ? 360 : 352} L${x - 26} ${roupa === "fada" ? 360 : 352} L${x - 15} 312 Z"`, cor, "volSuave") +
+      (roupa === "fada" ? `<g fill="#e9e0ff" fill-opacity=".85"><ellipse cx="${x - 20}" cy="300" rx="12" ry="8"/><ellipse cx="${x + 20}" cy="300" rx="12" ry="8"/></g><polygon points="${pontosEstrela(x, 336, 5)}" fill="#fff"/>`
+        : `<circle cx="${x - 8}" cy="330" r="2" fill="${escurecer(cor, .25)}"/><circle cx="${x + 6}" cy="338" r="2" fill="${escurecer(cor, .25)}"/><circle cx="${x - 2}" cy="320" r="2" fill="${escurecer(cor, .25)}"/>`);
+  return `<g data-roupa="${roupa}">
+    <rect x="${x - 20}" y="262" width="40" height="124" fill="#fff" fill-opacity="0"/>
+    <path d="M${x} 264 q-5 -1 -4 6 M${x - 14} 288 L${x} 274 L${x + 14} 288" stroke="#cfc3b0" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    ${corpo}</g>`;
+}
+

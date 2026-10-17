@@ -46,7 +46,15 @@ button:focus-visible { outline: 3px solid var(--acento); outline-offset: 3px; }
 /* =========================================================
    A CASA
    ========================================================= */
-#mundo { display: block; width: 100%; height: 100%; }
+.palco { position: relative; width: 100%; height: 100%; }
+#cena3d, #mundo { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#cena3d { background: #cfe0f0; }
+#mundo { background: transparent; }
+/* de noite, as pessoas e os bichos (2D) escurecem junto com a casa (3D) */
+#g-pessoas, #g-animais, #g-bichos, #g-itens-chao { transition: filter 1.8s ease; }
+.e-noite #g-pessoas, .e-noite #g-animais, .e-noite #g-bichos, .e-noite #g-itens-chao { filter: brightness(.68) saturate(.85); }
+.coruja-toque { opacity: 0; pointer-events: none; transition: opacity 2s; }
+.e-noite .coruja-toque { opacity: 1; pointer-events: auto; }
 [data-coisa], [data-lugar], [data-item], [data-pessoa] { cursor: pointer; }
 
 /* --- pessoas: andar, respirar, abaixar, abraçar --- */

@@ -98,9 +98,15 @@ const balao = document.getElementById("balao");
 const cam = { x: 900, y: 0, vw: 1000, vh: 620, s: 1, rect: null };
 const gente = {};
 
+/* A cena 3D (casa, móveis, céu) fica num "canvas" atrás; a camada 2D (pessoas, bichos, coisas no chão) fica por cima */
+const tela3d = document.getElementById("cena3d");
+let tem3D = false;
+try { iniciar3D(tela3d); tem3D = true; } catch (e) { console.warn("Sem 3D neste aparelho", e); }
+
 function montarMundo() {
-  svg.innerHTML = `<g id="g-longe">${desenharLonge()}</g><g id="g-casa">${desenharCasa(familia)}</g><g id="g-itens-chao"></g><g id="g-animais"></g><g id="g-pessoas"></g><g id="g-frente">${desenharFrente()}</g><g id="g-noite">${desenharNoite()}</g>`;
+  svg.innerHTML = `<g id="g-bichos">${desenharBichos()}</g><g id="g-itens-chao"></g><g id="g-animais"></g><g id="g-pessoas"></g>`;
   svg.classList.toggle("e-noite", noite);
+  if (tem3D) retratos3D(familia);
   criarCachorro();
   for (const id of ["vovoo", "vovo", "manu"]) criarPessoa(id);
   desenharTudo();
@@ -151,7 +157,7 @@ function desenharTudo() {
   desenharChao();
   for (const l of Object.keys(LUGARES)) desenharLugar(l);
   for (const id of Object.keys(gente)) desenharMao(id);
-  document.getElementById("frutas-arvore").innerHTML = desenharFrutasArvore(mundo.arvore);
+  if (tem3D) arvore3D(mundo.arvore);
   document.getElementById("cenouras").innerHTML = desenharCenouras(mundo.horta);
   desenharForno();
   desenharBolsa();
@@ -159,9 +165,9 @@ function desenharTudo() {
 }
 
 function desenharForno() {
-  document.getElementById("dentro-forno").innerHTML = mundo.forno ? `<g transform="translate(2590 474) scale(.75)">${ITENS.bolo.d()}</g>` : "";
-  document.getElementById("dentro-freezer").innerHTML = Array.from({ length: mundo.freezer }, (_, i) =>
-    `<g transform="translate(${2170 + i * 40} 288) scale(.62)">${ITENS.picole.d()}</g>`).join("");
+  if (!tem3D) return;
+  forno3D(mundo.forno);
+  freezer3D(mundo.freezer);
 }
 
 function desenharChao(caiu) {
@@ -169,7 +175,7 @@ function desenharChao(caiu) {
     `<g transform="translate(${n1(i.x)} 530)"><g class="${i.id === caiu ? "caindo" : ""}">${desenharItem(i.tipo, `data-item="${i.id}"`)}</g></g>`).join("");
 }
 function desenharLugar(l) {
-  document.getElementById("dentro-" + l).innerHTML = desenharDentro(l, itensEm(l));
+  if (tem3D) conteudo3D(l, itensEm(l));
 }
 function desenharMao(quem) {
   const i = naMao(quem), alvo = gente[quem]?.el.querySelector(".mao");
@@ -178,9 +184,8 @@ function desenharMao(quem) {
 
 /* Quando a Manu segura algo, o lugar certo dele brilha de leve (uma dica, sem pressa) */
 function mostrarDica() {
-  document.querySelectorAll(".dica").forEach(e => e.classList.remove("dica"));
   const i = naMao("manu");
-  if (i) document.getElementById(lugarCerto(i.tipo))?.classList.add("dica");
+  if (tem3D) dica3D(i ? lugarCerto(i.tipo) : null);
 }
 
 /* ---------- 4. Câmera ---------- */
@@ -192,7 +197,7 @@ function medirTela() {
   cam.vh = r.height / cam.s;
   cam.y = (cam.vh > 800 ? 290 : 330) - cam.vh / 2; // em pé, mostra mais céu e o jardim
   cam.x = alvoDaCamera();
-  aplicarCamera();
+  aplicarCamera(true);
 }
 function alvoDaCamera() {
   const total = MUNDO.largura - MUNDO.inicio;
@@ -200,10 +205,10 @@ function alvoDaCamera() {
   return limitar(gente.manu.x - cam.vw / 2, MUNDO.inicio - 60, MUNDO.largura + 60 - cam.vw);
 }
 /* Paralaxe: o que está longe anda menos, o que está perto anda mais */
-function aplicarCamera() {
+function aplicarCamera(mudouTamanho) {
   svg.setAttribute("viewBox", `${n1(cam.x)} ${n1(cam.y)} ${n1(cam.vw)} ${n1(cam.vh)}`);
-  document.getElementById("g-longe")?.setAttribute("transform", `translate(${n1(cam.x * .6)} 0)`);
-  document.getElementById("g-frente")?.setAttribute("transform", `translate(${n1(-cam.x * .25)} 0)`);
+  // a câmera 3D copia o mesmo enquadramento (a perspectiva cuida da profundidade)
+  if (tem3D) definirCamera3D(cam.x, cam.y, cam.vw, cam.vh, mudouTamanho ? cam.rect.width : 0, cam.rect.height);
 }
 const mundoX = clientX => cam.x + (clientX - cam.rect.left) / cam.s;
 const telaXY = (x, y) => [cam.rect.left + (x - cam.x) * cam.s, cam.rect.top + (y - cam.y) * cam.s];
@@ -392,16 +397,23 @@ function guardar(i, lugar, quem = "manu") {
 }
 
 function abrir(lugar) {
-  const el = document.getElementById(lugar);
-  if (!el) return;
-  const classe = lugar === "bau" ? "aberto" : "aberta";
-  if (!el.classList.contains(classe)) { if (lugar === "bau") SONS.tampa(); else if (lugar === "geladeira") SONS.porta(); }
-  el.classList.add(classe);
-  clearTimeout(el._timer);
-  el._timer = setTimeout(() => {
-    el.classList.remove(classe);
-    if (lugar === "geladeira") SONS.porta(); else if (lugar === "bau") SONS.tampa();
-  }, 6000);
+  if (lugar === "fruteira") return;
+  abrirPor(lugar, 6000, lugar === "bau" ? SONS.tampa : SONS.porta);
+}
+
+/* Abre uma porta/tampa 3D por um tempo e fecha sozinha depois, com som nas duas vezes */
+const timersAbertos = {};
+function abrirPor(nome, ms, som) {
+  if (!tem3D) return;
+  if (!aberto3D(nome)) { som(); abrir3D(nome, true); }
+  clearTimeout(timersAbertos[nome]);
+  timersAbertos[nome] = setTimeout(() => { abrir3D(nome, false); som(); }, ms);
+}
+function alternar(nome, ms, som) {
+  if (!tem3D) return false;
+  if (aberto3D(nome)) { clearTimeout(timersAbertos[nome]); abrir3D(nome, false); som(); return false; }
+  abrirPor(nome, ms, som);
+  return true;
 }
 
 async function reagirAoGuardar(i, lugar) {
@@ -433,25 +445,35 @@ function aoTocar(ev) {
   // um toque perto do chão, nos pés de alguém, vale para o objeto que estiver ali
   const elPessoa = t.closest("[data-pessoa]");
   if (elPessoa && y > 445 && itemPerto(45)) return tocarItem(itemPerto(45), valeAinda);
-  // tocou na Manu de mãos vazias, mas tem algo atrás dela (o rádio, a janela...)? vale o que está atrás
-  let alvo = t;
-  if (elPessoa?.dataset.pessoa === "manu" && !naMao("manu")) {
-    const atras = document.elementsFromPoint(ev.clientX, ev.clientY)
-      .find(e => !e.closest("[data-pessoa]") && e.closest("[data-item],[data-roupa],[data-coisa],[data-lugar]"));
-    if (atras) alvo = atras;
+  const do3D = () => tem3D ? tocar3D(ev.clientX, ev.clientY, cam.rect) : null;
+  let el2d = t.closest("[data-item],[data-coisa]");
+  if (elPessoa) {
+    if (elPessoa.dataset.pessoa !== "manu" || naMao("manu")) return tocarPessoa(elPessoa.dataset.pessoa, valeAinda);
+    // tocou na Manu de mãos vazias, mas tem algo atrás dela (o rádio, a janela...)? vale o que está atrás
+    const atras = document.elementsFromPoint(ev.clientX, ev.clientY).find(e => !e.closest("[data-pessoa]") && e.closest("[data-item],[data-coisa]"));
+    if (atras) el2d = atras.closest("[data-item],[data-coisa]");
+    else {
+      const t3 = do3D();
+      if (t3 && t3.tipo !== "chao") return agirNo3D(t3, valeAinda);
+      return tocarPessoa("manu", valeAinda);
+    }
   }
-  if (elPessoa && alvo === t) return tocarPessoa(elPessoa.dataset.pessoa, valeAinda);
-  // o elemento mais "de dentro" vence: a porta do congelador ganha da geladeira inteira
-  const el = alvo.closest("[data-item],[data-roupa],[data-coisa],[data-lugar]");
-  if (el?.dataset.item) return tocarItem(item(el.dataset.item), valeAinda);
-  if (el?.dataset.roupa) return vestir(el.dataset.roupa, valeAinda);
-  if (el?.dataset.coisa) return tocarCoisa(el.dataset.coisa, alvo, valeAinda);
-  if (el?.dataset.lugar) return tocarLugar(el.dataset.lugar, valeAinda);
+  // primeiro o que está desenhado em 2D (bichos, coisas no chão, cenouras)...
+  if (el2d?.dataset.item) return tocarItem(item(el2d.dataset.item), valeAinda);
+  if (el2d?.dataset.coisa) return tocarCoisa(el2d.dataset.coisa, valeAinda, { el: el2d, alvo: t });
+  if (y > 470) { const perto = itemPerto(60); if (perto) return tocarItem(perto, valeAinda); }
+  // ...depois os objetos 3D (móveis, portas, roupas, o que tem dentro da geladeira)
+  const t3 = do3D();
+  if (t3 && t3.tipo !== "chao") return agirNo3D(t3, valeAinda);
+  // tocou no chão (ou na parede): só anda até lá
+  irAte(gente.manu, t3 ? t3.x : x);
+}
 
-  // tocou no chão: se tiver alguma coisa pertinho, pega; senão, só anda
-  const perto = itemPerto(60);
-  if (perto) return tocarItem(perto, valeAinda);
-  irAte(gente.manu, x);
+function agirNo3D(t3, valeAinda) {
+  if (t3.tipo === "item") return tocarItem(item(t3.valor), valeAinda);
+  if (t3.tipo === "roupa") return vestir(t3.valor, valeAinda);
+  if (t3.tipo === "lugar") return tocarLugar(t3.valor, valeAinda);
+  if (t3.tipo === "coisa") return tocarCoisa(t3.valor, valeAinda, t3);
 }
 
 function tocarItem(i, valeAinda) {
@@ -594,16 +616,18 @@ async function entregar(i, quem) {
   virarPara(p, gente.manu.x);
 }
 
-function tocarCoisa(nome, alvo, valeAinda) {
+/* info: de onde veio o toque. Num bicho 2D, traz o elemento (info.el);
+   num objeto 3D, traz detalhes como qual janela (info.qual) ou quem está no retrato (info.quem). */
+function tocarCoisa(nome, valeAinda, info = {}) {
   const manu = gente.manu;
-  const el = alvo.closest("[data-coisa]");
+  const el2d = info.el || svg.querySelector(`[data-coisa="${nome}"]`);
   const chegar = (x, fazer) => irAte(manu, x, () => { if (valeAinda()) fazer(); });
 
   switch (nome) {
     case "arvore":
       return chegar(COISAS.arvore, () => {
         virarPara(manu, 262);
-        animarEl(el, "sacode", 1000);
+        if (tem3D) sacudirArvore3D();
         SONS.vento();
         olhar("manu", 262, 240);
         sentir("manu", "curiosa", 900);
@@ -611,7 +635,7 @@ function tocarCoisa(nome, alvo, valeAinda) {
         mundo.arvore--;
         const caiu = novoItem("manga", "chao", { x: 190 + Math.random() * 130 });
         setTimeout(() => {
-          document.getElementById("frutas-arvore").innerHTML = desenharFrutasArvore(mundo.arvore);
+          if (tem3D) arvore3D(mundo.arvore);
           desenharChao(caiu.id);
           SONS.cair();
           sentir("manu", "surpresa", 1200);
@@ -622,7 +646,7 @@ function tocarCoisa(nome, alvo, valeAinda) {
       });
 
     case "horta": {
-      const elVaga = alvo.closest("[data-vaga]");
+      const elVaga = info.alvo?.closest?.("[data-vaga]");
       let v = elVaga ? +elVaga.dataset.vaga : mundo.horta.indexOf(true);
       const x = v >= 0 ? CENOURAS_HORTA[v] : COISAS.horta;
       return chegar(ladoDe(x, 34), () => {
@@ -640,7 +664,7 @@ function tocarCoisa(nome, alvo, valeAinda) {
     case "galinha":
       return chegar(COISAS.galinha, () => {
         virarPara(manu, 880);
-        animarEl(el, "cacareja", 700);
+        animarEl(el2d, "cacareja", 700);
         if (noite) return mudarCeu(false); // de noite, a galinha canta e amanhece
         somDeBicho("cocoro", "Có, có, có!", 880, 410);
         sentir("manu", "surpresa", 1400);
@@ -652,9 +676,10 @@ function tocarCoisa(nome, alvo, valeAinda) {
       });
 
     case "quadro": {
-      const quem = alvo.closest("[data-quem]")?.dataset.quem || "manu";
+      const quem = info.quem || "manu";
       return chegar(COISAS.quadro + (quem === "manu" ? -94 : quem === "vovoo" ? 94 : 0), () => {
         animar(manu, "pulinho", 650);
+        olhar("manu", manu.x, 230);
         dizer(quem === "manu" ? "narrador" : quem, "retrato");
       });
     }
@@ -664,14 +689,14 @@ function tocarCoisa(nome, alvo, valeAinda) {
         const ligar = !radioLigado;
         SONS.clique();
         tocarRadio(ligar, noite);
-        el.classList.toggle("tocando", ligar);
+        if (tem3D) radio3D(ligar);
         if (ligar) { dizer("vovoo", "radio"); sentir("manu", "alegre", 3000); }
       });
 
     case "gato":
       return chegar(ladoDe(1700, 80), () => {
         virarPara(manu, 1700);
-        animarEl(el, "acordado", 2600);
+        animarEl(el2d, "acordado", 2600);
         somDeBicho("miau", "Miau!", 1680, 450);
         sentir("manu", "alegre");
         setTimeout(SONS.ronrom, 900);
@@ -680,15 +705,16 @@ function tocarCoisa(nome, alvo, valeAinda) {
     case "filtro":
       return chegar(COISAS.filtro + 40, () => {
         virarPara(manu, COISAS.filtro);
-        animarEl(el, "pingando", 2600);
+        if (tem3D) { gota3D(); setTimeout(gota3D, 1200); }
         SONS.gota(); setTimeout(SONS.gota, 1200);
         dizer("vovo", "agua");
       });
 
     case "pia":
       return chegar(COISAS.pia, () => {
-        animarEl(el, "correndo", 1800);
+        if (tem3D) agua3D(1800);
         SONS.agua(1.6);
+        olhar("manu", COISAS.pia, 420);
         const i = naMao("manu");
         if (i && ehComida(i.tipo)) setTimeout(() => dizer("narrador", "lavou"), 900);
         else if (quemEstaPerto()) dizer("vovo", "lavar");
@@ -697,7 +723,7 @@ function tocarCoisa(nome, alvo, valeAinda) {
     case "fogao":
       return chegar(COISAS.fogao - 70, () => {
         virarPara(manu, COISAS.fogao);
-        animarEl(el, "fervendo", 2200);
+        if (tem3D) vapor3D();
         SONS.panela();
         sentir("manu", "atenta", 2000);
         sentir("vovo", "atenta", 2000);
@@ -709,16 +735,16 @@ function tocarCoisa(nome, alvo, valeAinda) {
 
     case "abajur":
       return chegar(COISAS.abajur - 60, () => {
-        const acesa = el.classList.toggle("acesa");
+        abajurAceso = !abajurAceso;
+        if (tem3D) abajur3D(abajurAceso);
         SONS.clique();
-        dizerFala("narrador", { texto: FALAS.narrador.abajur[acesa ? 0 : 1] });
+        dizerFala("narrador", { texto: FALAS.narrador.abajur[abajurAceso ? 0 : 1] });
       });
 
     case "janela": {
-      const caixa = el.getBBox(), cx = caixa.x + caixa.width / 2;
+      const cx = info.x || manu.x;
       return chegar(cx, () => {
-        const aberta = el.classList.toggle("aberta");
-        SONS.janela();
+        const aberta = alternar("janela-" + info.qual, 20000, SONS.janela);
         olhar("manu", cx, 250);
         if (aberta) { SONS.vento(); setTimeout(SONS.piu, 700); sentir("manu", "alegre"); dizer("narrador", "janela"); }
       });
@@ -726,11 +752,7 @@ function tocarCoisa(nome, alvo, valeAinda) {
 
     case "freezer":
       return chegar(LUGARES.geladeira.x, () => {
-        const g = document.getElementById("geladeira");
-        if (!g.classList.contains("freezer-aberto")) SONS.porta();
-        g.classList.add("freezer-aberto");
-        clearTimeout(g._timerFreezer);
-        g._timerFreezer = setTimeout(() => { g.classList.remove("freezer-aberto"); SONS.porta(); }, 5000);
+        abrirPor("freezer", 5000, SONS.porta);
         olhar("manu", 2190, 260);
         if (mundo.freezer <= 0) return sentir("manu", "curiosa");
         setTimeout(() => {
@@ -740,19 +762,15 @@ function tocarCoisa(nome, alvo, valeAinda) {
           dizerNome("picole");
           sentir("manu", "surpresa", 900);
           setTimeout(() => { sentir("manu", "alegre"); dizer("vovo", "picole"); }, 1200);
-        }, 450);
+        }, 550);
       });
 
-    case "forno": {
-      const fogao = el.closest('[data-coisa="fogao"]');
+    case "forno":
       return chegar(COISAS.fogao - 70, () => {
         virarPara(manu, COISAS.fogao);
-        const aberto = fogao.classList.toggle("forno-aberto");
-        SONS.forno();
+        const aberto = alternar("forno", 6000, SONS.forno);
         olhar("manu", COISAS.fogao, 460);
         if (!aberto) return;
-        clearTimeout(fogao._timer);
-        fogao._timer = setTimeout(() => { fogao.classList.remove("forno-aberto"); SONS.forno(); }, 6000);
         sentir("manu", "surpresa", 1200);
         if (!mundo.forno) return dizer("vovo", "quente");
         setTimeout(() => {
@@ -762,33 +780,24 @@ function tocarCoisa(nome, alvo, valeAinda) {
           sentir("manu", "alegre", 2400);
           sentir("vovo", "alegre", 2400);
           dizer("vovo", "bolo");
-        }, 700);
+        }, 750);
       });
-    }
 
-    case "armarioPia": {
-      const pia = el.closest('[data-coisa="pia"]');
+    case "armarioPia":
       return chegar(COISAS.armarioPia, () => {
-        const aberta = pia.classList.toggle("pia-aberta");
-        SONS.porta();
+        const aberta = alternar("pia", 6000, SONS.porta);
         olhar("manu", COISAS.armarioPia, 470);
         if (!aberta) return;
-        clearTimeout(pia._timer);
-        pia._timer = setTimeout(() => { pia.classList.remove("pia-aberta"); SONS.porta(); }, 6000);
         sentir("manu", "curiosa");
         dizer("narrador", "panelas");
       });
-    }
 
     case "armario":
       return chegar(COISAS.armario + 110, () => {
         virarPara(manu, COISAS.armario);
-        const aberto = el.classList.toggle("aberto");
-        SONS.rangido();
+        const aberto = alternar("armario", 14000, SONS.rangido);
         olhar("manu", COISAS.armario, 330);
         if (!aberto) return;
-        clearTimeout(el._timer);
-        el._timer = setTimeout(() => { el.classList.remove("aberto"); SONS.rangido(); }, 12000);
         sentir("manu", "curiosa", 2500);
         dizer("narrador", "armario");
       });
@@ -807,7 +816,7 @@ function tocarCoisa(nome, alvo, valeAinda) {
     case "pato":
       return chegar(COISAS.pato + 150, () => {
         virarPara(manu, COISAS.pato);
-        animarEl(el, "nadando", 4000);
+        animarEl(svg.querySelector('[data-coisa="pato"]'), "nadando", 4000);
         somDeBicho("quem", "Quém, quém!", -440, 440);
         sentir("manu", "rindo");
       });
@@ -815,7 +824,7 @@ function tocarCoisa(nome, alvo, valeAinda) {
     case "passaros":
       return chegar(COISAS.passaros + 90, () => {
         virarPara(manu, COISAS.passaros);
-        animarEl(el, "voando", 4200);
+        animarEl(el2d, "voando", 4200);
         somDeBicho("piu", "Piu, piu!", -40, 360);
         sentir("manu", "curiosa", 3000);
         olhar("manu", -40, 200);
@@ -825,7 +834,7 @@ function tocarCoisa(nome, alvo, valeAinda) {
     case "coruja":
       return chegar(COISAS.coruja + 90, () => {
         virarPara(manu, COISAS.coruja);
-        animarEl(el, "pisca", 900);
+        animarEl(el2d, "pisca", 900);
         somDeBicho("uhuh", "Uh, uh!", 300, 222);
         sentir("manu", "surpresa");
         olhar("manu", 300, 240);
@@ -835,6 +844,7 @@ function tocarCoisa(nome, alvo, valeAinda) {
       return chegar(COISAS[nome] || manu.x, () => dizer("narrador", nome));
   }
 }
+let abajurAceso = false;
 
 /* O Caramelo busca a bola: a Manu joga, ele corre, pega e traz de volta */
 async function brincarDeBuscar(bola) {
@@ -885,7 +895,8 @@ async function mudarCeu(paraNoite) {
   const vez = ++vezDoCeu, ainda = () => vez === vezDoCeu;
   svg.classList.toggle("e-noite", noite);
   document.getElementById("ceu").dataset.noite = noite ? "sim" : "";
-  svg.querySelector('[data-coisa="abajur"]')?.classList.toggle("acesa", noite);
+  abajurAceso = noite;
+  if (tem3D) noite3D(noite);
   grilos(noite);
   if (radioLigado) tocarRadio(true, noite);
   for (const id of Object.keys(gente)) sentir(id, noite ? "sono" : "alegre", 2600);
@@ -985,7 +996,7 @@ bandeja.addEventListener("click", e => {
 /* ---------- 10. O relógio do jogo ---------- */
 let antes = performance.now();
 function relogio(agora) {
-  const dt = Math.min(.05, (agora - antes) / 1000);
+  const dt = Math.min(.12, (agora - antes) / 1000); // em aparelho lento, os passos ficam maiores (não em câmera lenta)
   antes = agora;
   if (!document.getElementById("inicio").hidden) { requestAnimationFrame(relogio); return; }
   mover(dt);
@@ -998,8 +1009,7 @@ function relogio(agora) {
   const manu = gente.manu;
   // a porta da frente abre quando alguém (ou o Caramelo) passa por ela
   const perto = [...Object.values(gente), cao].some(p => Math.abs(p.x - 1000) < 120);
-  const porta = document.getElementById("porta-frente");
-  if (porta && perto !== porta.classList.contains("aberta")) { porta.classList.toggle("aberta", perto); SONS.rangido(); }
+  if (tem3D && perto !== aberto3D("porta")) { porta3D(perto); SONS.rangido(); }
 
   // de vez em quando, todos olham: a família para a Manu, a Manu para onde vai
   if (agora - (relogio.ultimoOlhar || 0) > 350) {
@@ -1027,6 +1037,7 @@ function relogio(agora) {
       dizer(id, noite ? "noite" : "oi");
     }
   }
+  if (tem3D) desenhar3D(agora);
   requestAnimationFrame(relogio);
 }
 
@@ -1038,9 +1049,9 @@ setInterval(() => {
   if (v >= 0) { mundo.horta[v] = true; mudou = true; }
   if (!mundo.forno) { mundo.forno = true; mudou = true; }
   if (mundo.freezer < 2) { mundo.freezer++; mudou = true; }
-  if (mudou && document.getElementById("dentro-forno")) desenharForno();
-  if (mudou && document.getElementById("frutas-arvore")) {
-    document.getElementById("frutas-arvore").innerHTML = desenharFrutasArvore(mundo.arvore);
+  if (mudou) {
+    desenharForno();
+    if (tem3D) arvore3D(mundo.arvore);
     document.getElementById("cenouras").innerHTML = desenharCenouras(mundo.horta);
     salvar();
   }
@@ -1105,7 +1116,7 @@ document.getElementById("entrar").addEventListener("click", async () => {
 function irParaInicio() {
   pararSons();
   tocarRadio(false);
-  document.querySelector("[data-coisa='radio']")?.classList.remove("tocando");
+  if (tem3D) radio3D(false);
   grilos(false);
   querTelaCheia = false;
   voltar.hidden = true;
@@ -1134,7 +1145,7 @@ svg.addEventListener("pointerdown", aoTocar);
 svg.addEventListener("contextmenu", e => e.preventDefault());
 addEventListener("resize", () => medirTela());
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden) { pararSons(); tocarRadio(false); grilos(false); svg.querySelector("[data-coisa='radio']")?.classList.remove("tocando"); }
+  if (document.hidden) { pararSons(); tocarRadio(false); grilos(false); if (tem3D) radio3D(false); }
   else if (noite && inicio.hidden) grilos(true);
 });
 

@@ -1,5 +1,8 @@
 # A Casa da Vovó
 
+A casa é em 3D (perspectiva, luz do sol, sombras e lâmpadas acesas à noite); as pessoas e os bichos são desenhados
+em 2D por cima, para poderem sentir, piscar e andar.
+
 Jogo calmo de casinha para a Manu (e, depois, para os primos), com a família de verdade e as vozes dela.
 
 **Jogar:** https://israeloliveiraa03-byte.github.io/JODO-MANU-/ (melhor com o celular deitado)
@@ -36,7 +39,9 @@ não existe para sites, use "Acesso Guiado" (Ajustes → Acessibilidade → Aces
 | `estilo.css` | A aparência e as animações |
 | `js/falas.js` | **As falas da família** — é aqui que entram as gravações |
 | `js/itens.js` | As coisas que dá para pegar |
-| `js/casa.js` | Os desenhos da casa e onde fica cada coisa |
+| `js/casa3d.js` | **A casa em 3D**: paredes, móveis, quintal, céu, luzes, portas que giram |
+| `js/casa.js` | Medidas da casa, onde fica cada coisa e os bichos desenhados em 2D |
+| `js/lib/three.min.js` | A biblioteca de 3D (three.js, licença MIT), guardada aqui para não depender de outro site |
 | `js/avatar.js` | Como as pessoas são desenhadas e as opções do ateliê |
 | `js/editor.js` | O ateliê de personagem |
 | `js/som.js` | Vozes, sons dos bichos e das coisas (feitos pelo próprio navegador) e o rádio |
