@@ -4,18 +4,29 @@ Jogo de casinha para a Manu (2 anos), feito para o celular, com as vozes reais d
 
 **Jogar:** https://israeloliveiraa03-byte.github.io/JODO-MANU-/
 
-## O que tem agora (protótipo 1)
+## O que tem agora
 
-O quarto da Manu, com seis coisas para tocar: a Manu, o gato, o bolo, a cama, a caixa surpresa e a janela.
-Cada toque faz o objeto se mexer e dizer uma fala. Não existe erro: tocar em qualquer lugar solta confetes.
+- **Montar a Manu**: ateliê para montar a personagem (pele, cabelo, enfeite, olhos, boca, óculos, roupa e sapatos).
+  A escolha fica guardada no celular.
+- **O quarto**: seis coisas para tocar (a Manu, o gato, o bolo, a cama, a caixa surpresa e a janela).
+  Cada toque faz o objeto se mexer e dizer uma fala. Não existe erro: tocar em qualquer lugar solta confetes.
+- Para sair do quarto, segure a casinha no canto da tela por 1 segundo.
 
 ## Como o projeto está organizado
 
-- `index.html` — o jogo inteiro (desenhos, sons e regras) num arquivo só.
-- `audio/` — onde entram as gravações da família.
+| Arquivo | O que faz |
+|---|---|
+| `index.html` | O esqueleto: as três telas (início, quarto, ateliê) e a luz/sombra dos desenhos |
+| `estilo.css` | A aparência: cores, botões, animações |
+| `js/som.js` | Os sons e as vozes |
+| `js/avatar.js` | Como a personagem é desenhada e todas as opções do ateliê |
+| `js/editor.js` | O ateliê de personagem |
+| `js/cena.js` | Os desenhos do quarto |
+| `js/jogo.js` | O que acontece em cada toque, e as falas (lista `CENA`) |
+| `audio/` | Onde entram as gravações da família |
 
-Dentro do `index.html`, a lista `CENA` (logo no começo do script) diz o que cada objeto fala e com qual voz.
-Para mudar ou acrescentar falas, é só mexer nela.
+Para mudar ou acrescentar falas, mexa na lista `CENA`, no começo de `js/jogo.js`.
+Para acrescentar uma opção nova no ateliê (um penteado, uma roupa), acrescente um item em `js/avatar.js`.
 
 ## Dica
 
