@@ -110,7 +110,7 @@ function iniciar3D(canvas) {
 
   C3.ceuDia = pintar(8, 256, (g, w, h) => {
     const gr = g.createLinearGradient(0, 0, 0, h);
-    gr.addColorStop(0, "#9fc6ea"); gr.addColorStop(.6, "#d6e8f1"); gr.addColorStop(1, "#f3efe2");
+    gr.addColorStop(0, "#6fa7db"); gr.addColorStop(.55, "#b5d5ec"); gr.addColorStop(1, "#f4e2bf");
     g.fillStyle = gr; g.fillRect(0, 0, w, h);
   });
   C3.ceuNoite = pintar(8, 256, (g, w, h) => {
@@ -120,7 +120,7 @@ function iniciar3D(canvas) {
   });
   C3.cena.background = C3.ceuDia;
 
-  C3.hemi = new T.HemisphereLight("#fff6e6", "#cdbb9e", .5);
+  C3.hemi = new T.HemisphereLight("#fff4e0", "#d6b48a", .5);
   C3.cena.add(C3.hemi);
   const sol = new T.DirectionalLight("#fff1d6", .56);
   sol.castShadow = true;
@@ -174,73 +174,147 @@ function construirMundo3D() {
   C3.dica = brilho;
 }
 
+/* =========================================================
+   A CAATINGA: plantas e pedras do sertão, feitas de formas simples
+   ========================================================= */
+const COR = {
+  terra: "#dcae79", terraEscura: "#c99662", capim: "#d8c27c", cacto: "#6f9a6b", cactoClaro: "#86ad7c",
+  folhaSeca: "#a3ad7f", folhaVerde: "#93a86c", ipe: "#f2c94c", pedra: "#cbb9aa", pedraEscura: "#b9a596",
+  vara: "#9c8466", serra: "#aab6c6", morro: "#cdbb8e",
+};
+// mandacaru: o cacto alto, de braços para cima
+function mandacaru(h, k = 1, flor = false) {
+  const g = new T.Group();
+  const coluna = (r, alt) => { const o = new T.Group(); o.add(cilindro(r, r * 1.08, alt, COR.cacto, 10)); const topo = bola(r, COR.cacto, 10); topo.position.y = alt; o.add(topo); return o; };
+  g.add(coluna(15 * k, h));
+  for (const [lado, y, alt] of [[-1, h * .42, h * .38], [1, h * .55, h * .3], [1, h * .3, h * .22]]) {
+    const braco = new T.Group();
+    const cotovelo = cilindro(11 * k, 11 * k, 30 * k, COR.cacto, 8);
+    cotovelo.rotation.z = -lado * Math.PI / 2;
+    braco.add(cotovelo);
+    const sobe = coluna(11 * k, alt);
+    sobe.position.x = lado * 30 * k;
+    braco.add(sobe);
+    braco.position.set(0, y, 0);
+    g.add(braco);
+  }
+  if (flor) { const f = bola(7 * k, "#f3b8c8", 8); f.position.y = h + 14 * k; g.add(f); }
+  return g;
+}
+// xique-xique: cactinhos baixos, em tufo
+function xiqueXique(k = 1) {
+  const g = new T.Group();
+  [[0, 50, 0], [-14, 34, -.3], [14, 40, .3], [6, 26, .5]].forEach(([x, h, r]) => {
+    const c = cilindro(7 * k, 8 * k, h * k, COR.cactoClaro, 8);
+    c.position.x = x * k; c.rotation.z = r; g.add(c);
+  });
+  return g;
+}
+// coroa-de-frade: cacto redondinho com "chapéu" vermelho
+function coroaDeFrade(k = 1) {
+  const g = new T.Group();
+  const corpo = bola(16 * k, COR.cacto, 12); corpo.scale.y = .8; corpo.position.y = 12 * k; g.add(corpo);
+  const coroa = cilindro(9 * k, 10 * k, 10 * k, "#c9574b", 10); coroa.position.y = 22 * k; g.add(coroa);
+  return g;
+}
+// arbusto da caatinga: tronco torto e copa miúda
+function arbusto(k = 1, cor = COR.folhaSeca) {
+  const g = new T.Group();
+  const t1 = cilindro(4 * k, 6 * k, 50 * k, "#8c7258", 6); t1.rotation.z = .25; g.add(t1);
+  const t2 = cilindro(3 * k, 4 * k, 40 * k, "#8c7258", 6); t2.rotation.z = -.4; t2.position.y = 20 * k; g.add(t2);
+  [[-14, 56, 22], [14, 62, 20], [0, 70, 24], [22, 50, 16]].forEach(([x, y, r]) => {
+    const b = bola(r * k, cor, 9); b.scale.y = .7; b.position.set(x * k, y * k, 0); g.add(b);
+  });
+  return g;
+}
+function capim(k = 1) {
+  const g = new T.Group();
+  for (let i = 0; i < 5; i++) {
+    const f = new T.Mesh(new T.ConeGeometry(2.5 * k, 26 * k, 4), mat(COR.capim));
+    f.position.set((i - 2) * 4 * k, 12 * k, (i % 2) * 3);
+    f.rotation.z = (i - 2) * .22;
+    g.add(f);
+  }
+  return g;
+}
+function lajedo(w, h, d, cor = COR.pedra) {
+  const g = new T.Group();
+  const a = bola(1, cor, 14); a.scale.set(w / 2, h, d / 2); g.add(a);
+  const b = bola(1, COR.pedraEscura, 12); b.scale.set(w / 4, h * .7, d / 3); b.position.set(w * .35, 0, d * .1); g.add(b);
+  return g;
+}
+
 function construirLonge(c) {
-  // chão de grama infinito
-  const grama = pintar(128, 128, (g, w, h) => {
-    g.fillStyle = "#b9d49c"; g.fillRect(0, 0, w, h);
-    for (let i = 0; i < 260; i++) { g.fillStyle = Math.random() < .5 ? "#b1cd93" : "#c2daa6"; g.fillRect(Math.random() * w, Math.random() * h, 2, 3); }
+  // chão de terra batida, com capim seco espalhado
+  const terra = pintar(128, 128, (g, w, h) => {
+    g.fillStyle = COR.terra; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 320; i++) { g.fillStyle = ["#d3a36d", "#e6c08f", "#d8b080"][i % 3]; g.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
+    g.strokeStyle = "#cdb46a"; g.lineWidth = 1;
+    for (let i = 0; i < 26; i++) { const x = Math.random() * w, y = Math.random() * h; g.beginPath(); g.moveTo(x, y); g.lineTo(x + 3, y - 6); g.moveTo(x + 2, y); g.lineTo(x - 2, y - 5); g.stroke(); }
   }, [140, 60]);
-  const chao = new T.Mesh(new T.PlaneGeometry(18000, 7000), new T.MeshToonMaterial({ map: grama, gradientMap: mat("#fff").gradientMap }));
+  const chao = new T.Mesh(new T.PlaneGeometry(18000, 7000), new T.MeshLambertMaterial({ map: terra, color: new T.Color(1.06, 1.06, 1.06) }));
   chao.rotation.x = -Math.PI / 2;
   chao.position.set(2000, A(522), -2000);
   chao.receiveShadow = true;
   tocavel(chao, "chao");
   c.add(chao);
-  // morros e árvores ao longe (a perspectiva já faz eles andarem mais devagar)
-  for (let i = 0; i < 16; i++) {
-    const m = bola(1, i % 2 ? "#cfe2bc" : "#c3dab0", 20);
-    m.scale.set(600 + (i % 4) * 160, 220 + (i % 3) * 70, 320);
-    m.position.set(-3500 + i * 620, A(522), -2300 - (i % 3) * 300);
-    m.castShadow = false;
-    semToque(m);
-    c.add(m);
-  }
-  for (let i = 0; i < 26; i++) {
-    const x = -3000 + i * 360 + (i % 3) * 60, z = -1100 - (i % 4) * 140;
-    const copa = bola(46 + (i % 3) * 12, i % 2 ? "#a9c98f" : "#b5d29b", 12);
-    copa.scale.y = 1.25;
-    por(c, cilindro(8, 10, 60, "#b49a7c", 8), x, 522, z).castShadow = false;
-    por(c, copa, x, 440, z).castShadow = false;
-    semToque(copa);
-  }
-  // jardim na frente da casa: moitas e florzinhas (aparecem embaixo da tela)
-  for (let x = -1200, i = 0; x < 5400; x += 260, i++) {
-    const z = 620 + (i % 3) * 60;
-    for (let j = 0; j < 2; j++) {
-      const m = bola(34 + (i % 2) * 10 - j * 6, ["#94b97a", "#9cc183", "#a3c78a"][(i + j) % 3], 12);
-      m.scale.y = .75;
-      m.position.set(x + j * 40, A(522) + 14, z + j * 10);
-      c.add(m);
-    }
-  }
-  const cores = ["#f6dfe3", "#fff6dc", "#f2c46a", "#e8b7c9", "#ffffff"];
-  for (let i = 0; i < 90; i++) {
-    const x = -1100 + Math.random() * 6400, z = 300 + Math.random() * 520;
-    if (x > 900 && x < 4100 && z < 380) continue;
-    const haste = cilindro(1.2, 1.2, 14, "#7fae6a", 5);
-    por(c, haste, x, 522, z).castShadow = false;
-    const flor = bola(5, cores[i % cores.length], 8);
-    flor.position.set(x, A(522) + 16, z);
-    flor.castShadow = false;
-    c.add(flor);
-  }
 
-  // nuvens fofinhas de bolinhas
-  for (let i = 0; i < 9; i++) {
+  // serras azuladas lá longe e morros cor de palha mais perto
+  for (let i = 0; i < 12; i++) {
+    const s = bola(1, i % 2 ? COR.serra : "#b7c1cf", 16);
+    s.scale.set(900 + (i % 3) * 300, 380 + (i % 4) * 120, 300);
+    s.position.set(-4200 + i * 900, A(522), -3400 - (i % 2) * 200);
+    s.castShadow = false; semToque(s); c.add(s);
+  }
+  for (let i = 0; i < 14; i++) {
+    const m = bola(1, i % 2 ? COR.morro : "#c4bd8f", 18);
+    m.scale.set(620 + (i % 4) * 150, 200 + (i % 3) * 70, 320);
+    m.position.set(-3500 + i * 680, A(522), -2300 - (i % 3) * 250);
+    m.castShadow = false; semToque(m); c.add(m);
+  }
+  // lajedos (grandes pedras arredondadas)
+  for (const [x, z, w, h] of [[-1500, -1300, 420, 90], [600, -1500, 300, 70], [2600, -1350, 520, 110], [4600, -1250, 380, 80]]) {
+    const l = lajedo(w, h, w * .6); l.position.set(x, A(522), z); semToque(l); c.add(l);
+  }
+  // vegetação da caatinga ao longe: arbustos, mandacarus e alguns ipês amarelos
+  for (let i = 0; i < 40; i++) {
+    const x = -3200 + i * 220 + (i % 5) * 37, z = -800 - (i % 6) * 120;
+    let o;
+    if (i % 7 === 3) o = arbusto(2.2, COR.ipe);
+    else if (i % 4 === 1) o = mandacaru(170 + (i % 3) * 40, .9);
+    else o = arbusto(1.8 + (i % 3) * .3, i % 2 ? COR.folhaSeca : COR.folhaVerde);
+    o.position.set(x, A(522), z);
+    o.traverse(m => { m.castShadow = false; });
+    semToque(o);
+    c.add(o);
+  }
+  // na beirada da frente do quintal: cactinhos, capim e pedrinhas
+  // (só fora da casa, para não tampar os cômodos)
+  for (let x = -1200, i = 0; x < 5000; x += 190, i++) {
+    if (x > 900 && x < 4100) continue;
+    const z = 250 + (i % 3) * 45;
+    let o = i % 5 === 0 ? coroaDeFrade(1.4) : i % 5 === 2 ? xiqueXique(1.3) : i % 5 === 4 ? lajedo(60, 18, 40) : capim(1.6);
+    o.position.set(x + (i % 3) * 30, A(522), z);
+    o.traverse(m => { m.castShadow = false; });
+    semToque(o);
+    c.add(o);
+  }
+  // poucas nuvens: o céu do sertão é aberto
+  for (let i = 0; i < 4; i++) {
     const g = new T.Group();
-    for (let j = 0; j < 4; j++) {
-      const b = bola(60 + (j % 2) * 30, mat("#ffffff", { emissive: "#eef3f6", emissiveIntensity: .35 }), 14);
-      b.position.set(j * 70 - 100, (j % 2) * 30, (j % 3) * 20);
+    for (let j = 0; j < 3; j++) {
+      const b = bola(55 + (j % 2) * 25, mat("#ffffff", { emissive: "#f3f1ea", emissiveIntensity: .35 }), 14);
+      b.position.set(j * 70 - 70, (j % 2) * 26, 0);
       b.castShadow = false;
       g.add(b);
     }
-    g.position.set(-2600 + i * 900, 520 + (i % 3) * 180, -3200);
+    g.position.set(-2400 + i * 2100, 640 + (i % 2) * 200, -3600);
     semToque(g);
     c.add(g);
   }
-  // o sol
-  const sol = new T.Mesh(new T.CircleGeometry(90, 32), new T.MeshBasicMaterial({ color: "#fff3c8" }));
-  sol.position.set(-1200, 700, -3600);
+  // o sol forte do sertão
+  const sol = new T.Mesh(new T.CircleGeometry(110, 32), new T.MeshBasicMaterial({ color: "#fff1b8" }));
+  sol.position.set(-1200, 760, -3800);
   semToque(sol);
   c.add(sol);
   C3.discoSol = sol;
@@ -248,30 +322,37 @@ function construirLonge(c) {
 
 /* ---------- quintal ---------- */
 function construirQuintal(c) {
-  // cerca
-  for (let x = -742; x < 990; x += 56) {
-    const p = bloco(18, 92, 12, "#f3eee4", 3);
-    por(c, p, x, 522, -250);
-    const ponta = new T.Mesh(new T.ConeGeometry(11, 14, 4), mat("#f3eee4"));
-    ponta.rotation.y = Math.PI / 4;
-    por(c, ponta, x, 423, -250);
+  // cerca de varas, tortinhas e de alturas diferentes
+  for (let x = -748, i = 0; x < 990; x += 22, i++) {
+    const h = 78 + ((i * 37) % 23);
+    const v = cilindro(3, 4, h, i % 3 ? COR.vara : "#8d765b", 5);
+    v.rotation.z = ((i * 13) % 7 - 3) * .02;
+    por(c, v, x, 522, -250);
   }
-  for (const y of [470, 430]) por(c, caixa(1745, 9, 8, "#ece5d8"), 116, y, -256);
+  for (const y of [468, 430]) {
+    const t = cilindro(3.5, 3.5, 1750, "#8d765b", 6);
+    t.rotation.z = Math.PI / 2;
+    t.position.set(1000, A(y), -246);
+    t.geometry.translate(0, 0, 0);
+    c.add(t);
+    t.position.x = -752 + 1750 / 2;
+    t.geometry.center();
+  }
 
-  // mangueira (as mangas são figurinhas que aparecem e somem)
+  // umbuzeiro: tronco baixo e torto, copa larga como um guarda-chuva
   const arvore = tocavel(new T.Group(), "coisa", "arvore");
-  por(arvore, cilindro(16, 24, 230, "#9a6a46", 10), 0, 0, 0);
-  const galho = cilindro(8, 11, 110, "#9a6a46", 8);
-  galho.rotation.z = -.7;
-  galho.position.set(8, 170, 0);
-  arvore.add(galho);
+  const tronco = cilindro(20, 30, 120, "#8c6a4c", 10); tronco.rotation.z = .08; arvore.add(tronco);
+  for (const [rz, h, x] of [[.7, 110, 0], [-.6, 120, 0], [.15, 100, 6]]) {
+    const g = cilindro(9, 14, h, "#8c6a4c", 8); g.rotation.z = rz; g.position.set(x, 100, 0); arvore.add(g);
+  }
   const copa = new T.Group();
-  for (const [x, y, r, z] of [[-92, -34, 78, -30], [90, -32, 82, -20], [-40, 72, 74, -50], [50, 64, 76, -40], [0, 0, 106, 0], [0, 40, 90, -70]]) {
-    const b = bola(r, x % 2 ? "#8fb97a" : "#93bd7e", 16);
+  for (const [x, y, r, z] of [[-130, -10, 70, -20], [130, -6, 74, -10], [-60, 20, 82, -40], [60, 22, 84, -30], [0, 0, 96, 0], [0, 30, 80, -70], [-170, -26, 50, 10], [175, -24, 52, 0]]) {
+    const b = bola(r, x % 3 ? COR.folhaVerde : "#a3b679", 14);
+    b.scale.y = .55;
     b.position.set(x, y, z);
     copa.add(b);
   }
-  copa.position.set(0, 286, 0);
+  copa.position.set(0, 230, 0);
   arvore.add(copa);
   const frutas = new T.Group();
   arvore.add(frutas);
@@ -279,17 +360,55 @@ function construirQuintal(c) {
   C3.grupos.copa = copa;
   C3.grupos.frutasArvore = frutas;
 
+  // rede de dormir, amarrada no umbuzeiro e num esteio
+  const rede = tocavel(new T.Group(), "coisa", "rede");
+  por(rede, cilindro(7, 9, 150, "#8c6a4c", 8), 238, 0, 0);
+  const listras = pintar(128, 16, (q, W, H) => { ["#d9735f", "#f0c561", "#6f9fbf", "#8fb07a", "#f3ead8"].forEach((cor, i) => { q.fillStyle = cor; q.fillRect(i * W / 5, 0, W / 5, H); }); }, [3, 1]);
+  const curva = new T.CatmullRomCurve3([[0, 122], [50, 82], [120, 66], [190, 82], [238, 128]].map(([x, y]) => new T.Vector3(x, y, 0)));
+  const pano = new T.Mesh(new T.TubeGeometry(curva, 32, 13, 8), new T.MeshLambertMaterial({ map: listras }));
+  pano.scale.z = 1.7;
+  pano.castShadow = true;
+  const balanco = new T.Group();
+  balanco.add(pano);
+  rede.add(balanco);
+  por(c, rede, 300, 522, -24);
+  C3.rede = balanco;
+
+  // roça de milho atrás da horta
+  const roca = tocavel(new T.Group(), "coisa", "horta");
+  for (let i = 0; i < 6; i++) {
+    const pe = new T.Group();
+    const h = 130 + (i % 3) * 18;
+    pe.add(cilindro(2.5, 3.5, h, "#a3ad62", 6));
+    for (const [y, lado] of [[h * .4, 1], [h * .6, -1], [h * .8, 1]]) {
+      const f = bola(1, "#9fb164", 6); f.scale.set(26, 3, 7); f.position.set(lado * 22, y, 0); f.rotation.z = lado * .5; pe.add(f);
+    }
+    const espiga = bola(1, "#e8c45a", 8); espiga.scale.set(5, 14, 5); espiga.position.set(5, h * .55, 4); pe.add(espiga);
+    pe.position.set(-90 + i * 36, 0, (i % 2) * 14);
+    roca.add(pe);
+  }
+  por(c, roca, 674, 522, -110);
   // horta
-  por(c, tocavel(bloco(220, 22, 70, "#9a7454", 6), "coisa", "horta"), 674, 522, -30);
-  // laguinho
+  por(c, tocavel(bloco(220, 22, 70, "#a0744e", 6), "coisa", "horta"), 674, 522, -30);
+  // açude pequeno (o pato mora aqui)
   const lago = tocavel(new T.Group(), "coisa", "pato");
-  const borda = cilindro(132, 136, 6, "#c9c2b0", 32); borda.scale.z = .45; lago.add(borda);
-  const agua = cilindro(120, 120, 7, mat("#9ccbdc", { emissive: "#a8d6e6", emissiveIntensity: .25 }), 32); agua.scale.z = .42; lago.add(agua);
-  for (const [x, h] of [[-118, 60], [-104, 76], [112, 54]]) por(lago, cilindro(2.5, 3.5, h, "#7fae6a", 6), x, 0, -16);
+  const borda = cilindro(132, 140, 6, "#b48f63", 32); borda.scale.z = .45; lago.add(borda);
+  const agua = cilindro(118, 118, 7, mat("#8fbcc9", { emissive: "#a0cad6", emissiveIntensity: .25 }), 32); agua.scale.z = .42; lago.add(agua);
+  for (const [x, h] of [[-118, 50], [-104, 64], [112, 46]]) por(lago, cilindro(2.5, 3.5, h, "#a9a35e", 6), x, 0, -16);
   por(c, lago, -430, 522, -24);
-  // casinha do Caramelo
+  por(c, coroaDeFrade(1.2), -300, 522, -70);
+  // lajedo onde o calango toma sol
+  const pedra = tocavel(lajedo(130, 46, 90), "coisa", "calango");
+  por(c, pedra, -690, 522, -60);
+  // cisterna (guarda a água da chuva)
+  const cisterna = tocavel(new T.Group(), "coisa", "cisterna");
+  cisterna.add(cilindro(70, 74, 110, "#f1ebe0", 24));
+  const tampa = new T.Mesh(new T.ConeGeometry(74, 26, 24), mat("#e6dccb")); tampa.position.y = 123; cisterna.add(tampa);
+  const bica = cilindro(3, 3, 22, "#9fb3c3", 8); bica.rotation.x = Math.PI / 2; bica.position.set(0, 20, 72); cisterna.add(bica);
+  por(c, cisterna, -580, 522, -170);
+  // casinha do Caramelo (de taipa, com telhado de telha)
   const casinha = new T.Group();
-  por(casinha, bloco(120, 70, 90, "#d9b38c", 6), 0, 0, 0);
+  por(casinha, bloco(120, 70, 90, "#d8b07c", 6), 0, 0, 0);
   const tel = new T.Shape(); tel.moveTo(-74, 0); tel.lineTo(0, 56); tel.lineTo(74, 0); tel.lineTo(-74, 0);
   const telhado = malha(new T.ExtrudeGeometry(tel, { depth: 100, bevelEnabled: false }), mat("#c98a6e"));
   telhado.position.set(0, 66, -50);
@@ -304,27 +423,33 @@ function construirQuintal(c) {
   por(c, casinha, -250, 522, -120);
   // banquinho onde os passarinhos pousam
   const banco = new T.Group();
-  por(banco, bloco(130, 8, 26, "#c9a47e", 3), 0, 0, 0).position.y = 112;
-  for (const x of [-50, 50]) por(banco, cilindro(5, 6, 112, "#b58a62", 8), x, 0, 0);
+  por(banco, bloco(130, 8, 26, "#b58a62", 3), 0, 0, 0).position.y = 112;
+  for (const x of [-50, 50]) por(banco, cilindro(5, 6, 112, "#9c7a56", 8), x, 0, 0);
   por(c, banco, -36, 522, -2);
+  // mandacaru grande perto da casa (de noite, a coruja pousa nele)
+  por(c, tocavel(mandacaru(290, 1.15, true), "coisa", "mandacaru"), 925, 522, -170);
+  // capim e cactinhos pelo terreiro
+  for (const [x, z, f] of [[-520, -30, capim], [40, -150, xiqueXique], [180, -20, capim], [470, -170, capim], [820, -60, xiqueXique], [-120, -200, capim], [560, -40, capim]]) {
+    const o = f(1.2); o.position.set(x, A(522), z); c.add(o);
+  }
 }
 
 /* ---------- a casa: piso, paredes, teto, telhado ---------- */
 function papelDeParede(tipo) {
+  // parede caiada (branca de cal) com barrado pintado embaixo, como nas casas do sertão
+  const barrado = { sala: "#9fbfd3", cozinha: "#e2b66c", quarto: "#d9a497" }[tipo];
   return pintar(1000, 408, (g, w, h) => {
-    if (tipo === "sala") {
-      g.fillStyle = "#dfe7d5"; g.fillRect(0, 0, w, h);
-      g.fillStyle = "#e8eee0"; for (let x = 20; x < w; x += 44) g.fillRect(x, 0, 16, h);
-    } else if (tipo === "cozinha") {
-      g.fillStyle = "#f4ecdc"; g.fillRect(0, 0, w, h);
-      g.fillStyle = "#e3eef0"; g.fillRect(0, 244, w, h - 244);
-      g.strokeStyle = "#fff"; g.lineWidth = 2;
-      for (let x = 0; x <= w; x += 33) { g.beginPath(); g.moveTo(x, 244); g.lineTo(x, h); g.stroke(); }
-      for (let y = 244; y <= h; y += 33) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
-      g.fillStyle = "#c9dfe6"; for (let x = 16; x < w; x += 66) for (let y = 260; y < h; y += 66) { g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill(); }
-    } else {
-      g.fillStyle = "#f1e3e0"; g.fillRect(0, 0, w, h);
-      g.fillStyle = "#e6cfcb"; for (let y = 28, l = 0; y < h; y += 46, l++) for (let x = 20 + (l % 2) * 23; x < w; x += 46) { g.beginPath(); g.arc(x, y, 2.6, 0, 7); g.fill(); }
+    g.fillStyle = "#f6f0e2"; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 900; i++) { g.fillStyle = "rgba(200,180,150,.06)"; g.fillRect(Math.random() * w, Math.random() * h, 3, 2); }
+    const yb = 258;
+    g.fillStyle = barrado; g.fillRect(0, yb, w, h - yb);
+    g.fillStyle = "rgba(255,255,255,.18)"; g.fillRect(0, yb, w, 8);
+    g.fillStyle = barrado; g.fillRect(0, yb - 14, w, 4);
+    // estêncil: florzinhas de quatro pétalas em cima do barrado
+    for (let x = 26; x < w; x += 52) {
+      g.fillStyle = barrado;
+      for (const [dx, dy] of [[0, -7], [7, 0], [0, 7], [-7, 0]]) { g.beginPath(); g.arc(x + dx, yb - 30 + dy, 4.5, 0, 7); g.fill(); }
+      g.fillStyle = "#f6f0e2"; g.beginPath(); g.arc(x, yb - 30, 2.5, 0, 7); g.fill();
     }
     const gr = g.createLinearGradient(0, 0, 0, 40); gr.addColorStop(0, "rgba(26,15,20,.12)"); gr.addColorStop(1, "rgba(26,15,20,0)");
     g.fillStyle = gr; g.fillRect(0, 0, w, 40);
@@ -343,26 +468,26 @@ function construirCasaEstrutura(c) {
   });
   por(c, caixa(3000, 16, 8, "#f6f2ea"), 2500, 520, fundo + 4);
   // piso de tábuas
+  // piso de cimento queimado vermelho, com as juntas em quadrados
   const tabuas = pintar(256, 256, (g, w, h) => {
-    g.fillStyle = "#d9ac79"; g.fillRect(0, 0, w, h);
-    for (let y = 0; y < h; y += 32) {
-      g.fillStyle = (y / 32) % 2 ? "#d3a572" : "#ddb27f"; g.fillRect(0, y, w, 30);
-      g.fillStyle = "#c39062"; g.fillRect(0, y + 30, w, 2);
-      g.fillRect(((y * 7) % w), y, 2, 30); g.fillRect(((y * 7 + 128) % w), y, 2, 30);
-    }
-  }, [12, 2]);
-  const piso = new T.Mesh(new T.BoxGeometry(3000, 22, prof), [mat("#c99a6b"), mat("#c99a6b"), new T.MeshLambertMaterial({ map: tabuas, color: new T.Color(1.1, 1.1, 1.1) }), mat("#c99a6b"), mat("#c99a6b"), mat("#c99a6b")]);
+    g.fillStyle = "#b85d4b"; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 1400; i++) { g.fillStyle = ["rgba(140,60,45,.18)", "rgba(220,140,120,.14)", "rgba(110,45,35,.12)"][i % 3]; g.beginPath(); g.arc(Math.random() * w, Math.random() * h, 1 + Math.random() * 5, 0, 7); g.fill(); }
+    g.fillStyle = "rgba(255,230,210,.1)"; g.fillRect(0, 0, w, h / 2);
+    g.fillStyle = "#9b4a3b"; g.fillRect(0, 0, w, 2); g.fillRect(0, 0, 2, h);
+  }, [24, 3.5]);
+  const piso = new T.Mesh(new T.BoxGeometry(3000, 22, prof), [mat("#a65242"), mat("#a65242"), new T.MeshLambertMaterial({ map: tabuas, color: new T.Color(1.08, 1.08, 1.08) }), mat("#a65242"), mat("#a65242"), mat("#a65242")]);
   piso.position.set(2500, A(520) - 11, zMeio);
   piso.receiveShadow = true;
   tocavel(piso, "chao");
   c.add(piso);
   // alicerce de pedra
-  por(c, bloco(3030, 70, prof - 20, "#d3bba0", 6), 2500, 610, zMeio - 6).receiveShadow = true;
+  por(c, bloco(3030, 70, prof - 20, "#c46f55", 6), 2500, 610, zMeio - 6).receiveShadow = true;
   // laje do teto
-  const laje = por(c, bloco(3036, 26, prof + 20, "#efe2cc", 4), 2500, 114, zMeio);
+  const laje = por(c, bloco(3036, 26, prof + 20, "#e9d3b0", 4), 2500, 114, zMeio);
   laje.castShadow = false;
+  for (let x = 1030; x < 4000; x += 78) { const viga = caixa(10, 12, prof, "#8c6a4c"); viga.castShadow = false; por(c, viga, x, 102, zMeio); }
   // paredes cortadas (com os vãos das portas)
-  const parede = (x, w, z0, z1, yTopo, yBase) => { const o = por(c, bloco(w, yBase - yTopo, z1 - z0, "#f1e6d4", 4), x, yBase, (z0 + z1) / 2); o.castShadow = false; return o; };
+  const parede = (x, w, z0, z1, yTopo, yBase) => { const o = por(c, bloco(w, yBase - yTopo, z1 - z0, "#efd29b", 4), x, yBase, (z0 + z1) / 2); o.castShadow = false; return o; };
   parede(1001, 30, fundo, -64, 92, 566);         // parede do quintal, atrás da porta
   parede(1001, 30, 74, ZP.frente, 92, 566);       // e na frente da porta
   parede(1001, 30, -64, 74, 92, 248);            // em cima da porta
@@ -370,10 +495,10 @@ function construirCasaEstrutura(c) {
   parede(3999, 30, fundo, ZP.frente, 92, 566);
   // porta da frente (gira na dobradiça)
   const pivo = new T.Group();
-  const folha = bloco(10, 266, 138, "#b98458", 4);
+  const folha = bloco(10, 266, 138, "#6f93b8", 4);
   folha.position.set(0, 0, 69);
   pivo.add(folha);
-  for (const [y, h] of [[150, 96], [30, 100]]) { const almofada = bloco(4, h, 100, "#c99668", 3); almofada.position.set(6, y, 69); pivo.add(almofada); }
+  for (const [y, h] of [[150, 96], [30, 100]]) { const almofada = bloco(4, h, 100, "#83a6c8", 3); almofada.position.set(6, y, 69); pivo.add(almofada); }
   const macaneta = bola(6, "#f2c46a", 10); macaneta.position.set(9, 130, 120); pivo.add(macaneta);
   por(c, pivo, 1001, 520, -64);
   C3.pivos.porta = [{ obj: pivo, eixo: "y", aberto: 1.35 }];
@@ -412,16 +537,39 @@ function construirCasaEstrutura(c) {
 }
 
 /* ---------- janelas que abrem de verdade ---------- */
+/* Folha de janela de madeira, pintada de verde-água, com ripas */
+let _ripas = null;
+const TEX_RIPAS = () => _ripas || (_ripas = pintar(64, 128, (q, W, H) => {
+  q.fillStyle = "#6aa7a2"; q.fillRect(0, 0, W, H);
+  for (let y = 4; y < H; y += 10) { q.fillStyle = "#5b958f"; q.fillRect(4, y, W - 8, 3); q.fillStyle = "#7db8b2"; q.fillRect(4, y + 3, W - 8, 1); }
+  q.strokeStyle = "#4f857f"; q.lineWidth = 4; q.strokeRect(2, 2, W - 4, H - 4);
+}));
+/* Chita: o tecido florido das casas do Nordeste (em tons calmos) */
+const _chitas = {};
+function TEX_CHITA(fundo = "#d9735f") {
+  return _chitas[fundo] || (_chitas[fundo] = pintar(128, 128, (q, W, H) => {
+    q.fillStyle = fundo; q.fillRect(0, 0, W, H);
+    const flor = (x, y, r, cor) => {
+      q.fillStyle = cor;
+      for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; q.beginPath(); q.ellipse(x + Math.cos(a) * r * .6, y + Math.sin(a) * r * .6, r * .45, r * .3, a, 0, 7); q.fill(); }
+      q.fillStyle = "#f6e7b8"; q.beginPath(); q.arc(x, y, r * .28, 0, 7); q.fill();
+    };
+    q.fillStyle = "#7f9f6a"; for (const [x, y] of [[20, 60], [90, 20], [100, 100], [52, 108]]) { q.beginPath(); q.ellipse(x, y, 9, 4, .6, 0, 7); q.fill(); }
+    flor(32, 32, 22, "#f3efe2"); flor(96, 70, 26, "#f0c561"); flor(30, 98, 16, "#e8a3a3"); flor(104, 12, 12, "#9fc3dd");
+  }, [1, 1]));
+}
+
 function construirJanela(c, nome, x, y, w, h, corCortina) {
   const g = tocavel(new T.Group(), "coisa", "janela", { qual: nome, x: x + w / 2 });
   const z = ZP.fundo + 2;
   // a vista lá fora (dia e noite)
   const vistaDia = pintar(256, 256, (q, W, H) => {
-    const gr = q.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, "#b7d6ee"); gr.addColorStop(1, "#e6f0ee");
+    const gr = q.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, "#7fb2df"); gr.addColorStop(1, "#f1dfbd");
     q.fillStyle = gr; q.fillRect(0, 0, W, H);
-    q.fillStyle = "#bcd8a4"; q.beginPath(); q.ellipse(W * .3, H, W * .55, H * .32, 0, 0, 7); q.fill();
-    q.fillStyle = "#a9c98f"; q.beginPath(); q.ellipse(W * .85, H, W * .45, H * .22, 0, 0, 7); q.fill();
-    q.fillStyle = "#fff"; q.beginPath(); q.ellipse(W * .7, H * .25, 30, 12, 0, 0, 7); q.fill();
+    q.fillStyle = "#b9c3cf"; q.beginPath(); q.ellipse(W * .75, H * .82, W * .5, H * .2, 0, 0, 7); q.fill();
+    q.fillStyle = "#d9b787"; q.beginPath(); q.ellipse(W * .3, H, W * .6, H * .28, 0, 0, 7); q.fill();
+    q.fillStyle = "#6f9a6b"; q.fillRect(W * .22, H * .45, 12, H * .4); q.fillRect(W * .16, H * .58, 8, H * .12); q.fillRect(W * .16, H * .58, 20, 7); q.fillRect(W * .27, H * .52, 8, H * .14); q.fillRect(W * .24, H * .62, 14, 7);
+    q.fillStyle = "#a3ad7f"; q.beginPath(); q.ellipse(W * .72, H * .78, 26, 16, 0, 0, 7); q.fill();
   });
   const vistaNoite = pintar(256, 256, (q, W, H) => {
     q.fillStyle = "#1d2758"; q.fillRect(0, 0, W, H);
@@ -444,7 +592,7 @@ function construirJanela(c, nome, x, y, w, h, corCortina) {
   for (const lado of [-1, 1]) {
     const pivo = new T.Group();
     const fw = (w - 20) / 2;
-    const vidro = new T.Mesh(new T.PlaneGeometry(fw, h - 20), new T.MeshBasicMaterial({ color: "#ffffff", transparent: true, opacity: .22, depthWrite: false }));
+    const vidro = new T.Mesh(new T.PlaneGeometry(fw, h - 20), new T.MeshLambertMaterial({ map: TEX_RIPAS(), side: T.DoubleSide }));
     vidro.position.set(-lado * fw / 2, 0, 0);
     pivo.add(vidro);
     for (const [bx, bw] of [[-lado * fw + lado * 2, 5], [-lado * 2, 5]]) {
@@ -458,7 +606,7 @@ function construirJanela(c, nome, x, y, w, h, corCortina) {
   C3.pivos["janela-" + nome] = folhas;
   // cortinas
   for (const lado of [-1, 1]) {
-    const cortina = bloco(26, h + 20, 8, corCortina, 4);
+    const cortina = malha(geoBloco(26, h + 20, 8, 4), new T.MeshLambertMaterial({ map: TEX_CHITA(corCortina) }));
     cortina.position.set(lado < 0 ? x - 6 : x + w + 6, A(y + h + 12), z + 22);
     g.add(cortina);
     (C3.cortinas = C3.cortinas || {})[nome] = (C3.cortinas[nome] || []).concat(cortina);
@@ -501,21 +649,27 @@ function portaGiratoria(w, h, cor, lado, r = 5) {
 
 /* ---------- sala ---------- */
 function construirSala(c) {
-  construirJanela(c, "sala", 1494, 168, 150, 156, "#c8d6b8");
+  construirJanela(c, "sala", 1494, 168, 150, 156, "#d9735f");
   construirRetratos(c);
   // sofá
   const sofa = tocavel(new T.Group(), "coisa", "sofa");
-  const az = "#a9bccb";
+  const az = "#b8a58a";
   por(sofa, bloco(256, 40, 104, az, 10), 0, -18, 0);
-  por(sofa, bloco(252, 92, 34, "#9fb3c3", 14), 0, -40, -38);
-  por(sofa, bloco(36, 70, 108, "#9fb3c3", 14), -128, -18, 0);
-  por(sofa, bloco(36, 70, 108, "#9fb3c3", 14), 128, -18, 0);
-  por(sofa, bloco(108, 20, 88, "#b6c8d5", 8), -56, -58, 6);
-  por(sofa, bloco(108, 20, 88, "#b6c8d5", 8), 56, -58, 6);
-  const alm1 = bloco(60, 46, 18, "#e9d6b9", 9); alm1.rotation.z = .12; por(sofa, alm1, -80, -78, -20);
-  const alm2 = bloco(60, 46, 18, "#e3c4c0", 9); alm2.rotation.z = -.12; por(sofa, alm2, 80, -78, -20);
+  por(sofa, bloco(252, 92, 34, "#a99678", 14), 0, -40, -38);
+  por(sofa, bloco(36, 70, 108, "#a99678", 14), -128, -18, 0);
+  por(sofa, bloco(36, 70, 108, "#a99678", 14), 128, -18, 0);
+  por(sofa, bloco(108, 20, 88, "#c7b597", 8), -56, -58, 6);
+  por(sofa, bloco(108, 20, 88, "#c7b597", 8), 56, -58, 6);
+  const alm1 = malha(geoBloco(60, 46, 18, 9), new T.MeshLambertMaterial({ map: TEX_CHITA("#d9735f") })); alm1.rotation.z = .12; por(sofa, alm1, -80, -78, -20);
+  const alm2 = malha(geoBloco(60, 46, 18, 9), new T.MeshLambertMaterial({ map: TEX_CHITA("#6f9fbf") })); alm2.rotation.z = -.12; por(sofa, alm2, 80, -78, -20);
   for (const x of [-114, 114]) por(sofa, cilindro(5, 4, 18, "#8d6a4c", 8), x, 0, 30);
   por(c, sofa, 1290, 520, -195);
+  // chapéu de couro do vovô, pendurado num prego
+  const chapeu = tocavel(new T.Group(), "coisa", "chapeu");
+  const aba = cilindro(46, 46, 5, "#8a5a35", 24); aba.rotation.x = Math.PI / 2; chapeu.add(aba);
+  const copaC = bola(26, "#9a683f", 14); copaC.scale.z = .5; copaC.position.z = 8; chapeu.add(copaC);
+  for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; const est = bola(3, "#e3c48a", 6); est.position.set(Math.cos(a) * 36, Math.sin(a) * 36, 4); chapeu.add(est); }
+  por(c, chapeu, 1100, 250, ZP.fundo + 12);
   // tapete
   const tapete = cilindro(170, 170, 2, "#e8cdb6", 40); tapete.scale.z = .5;
   por(c, tapete, 1500, 520, -10);
@@ -581,7 +735,7 @@ function retratos3D(familia) {
 
 /* ---------- cozinha ---------- */
 function construirCozinha(c) {
-  construirJanela(c, "cozinha", 2330, 178, 140, 136, "#e9b7a8");
+  construirJanela(c, "cozinha", 2330, 178, 140, 136, "#6f9fbf");
   // filtro de barro
   const filtro = tocavel(new T.Group(), "coisa", "filtro");
   por(filtro, bloco(76, 10, 50, "#b58a62", 3), 0, -66, 0);
@@ -640,24 +794,24 @@ function construirCozinha(c) {
 
   // fogão com forno (porta que abre para baixo)
   const fogao = tocavel(new T.Group(), "coisa", "fogao");
-  const corF = "#f4f0ea";
+  const corF = "#f1e7d6";
   por(fogao, caixa(120, 102, 50, corF), 0, 0, -25);
   por(fogao, caixa(12, 102, 100, corF), -54, 0, 0);
   por(fogao, caixa(12, 102, 100, corF), 54, 0, 0);
-  por(fogao, bloco(120, 14, 104, corF, 4), 0, -88, 0);
+  por(fogao, bloco(124, 14, 106, "#4e4440", 3), 0, -88, 0);
   por(fogao, caixa(120, 26, 100, corF), 0, 0, 0);
   const brasa = caixa(96, 60, 2, mat("#5a3f34", { emissive: "#f39a4a", emissiveIntensity: 0 }));
   brasa.material = brasa.material.clone();
   por(fogao, brasa, 0, -26, -0);
-  for (const [x, z] of [[-30, -22], [30, -22], [-30, 22], [30, 22]]) por(fogao, cilindro(12, 12, 4, "#d9d2c8", 16), x, -102, z);
+  for (const [x, z] of [[-30, 0], [30, 0]]) { por(fogao, cilindro(20, 20, 3, "#3a3330", 18), x, -102, z); por(fogao, cilindro(13, 13, 3.5, "#5a504b", 16), x, -102, z); }
   const panelaF = new T.Group();
-  por(panelaF, cilindro(30, 28, 32, "#a9bccb", 22), 0, 0, 0);
-  por(panelaF, cilindro(32, 32, 5, "#9fb3c3", 22), 0, -32, 0);
-  por(panelaF, bola(6, "#8aa0b2", 10), 0, -40, 0);
+  por(panelaF, cilindro(30, 24, 32, "#b8714f", 22), 0, 0, 0);
+  por(panelaF, cilindro(31, 31, 5, "#a8634a", 22), 0, -32, 0);
+  por(panelaF, bola(6, "#8f523d", 10), 0, -40, 0);
   por(fogao, panelaF, 0, -106, 4);
   const portaForno = tocavel(new T.Group(), "coisa", "forno");
-  const pf = bloco(98, 64, 8, "#ece6dd", 6); pf.position.set(0, 0, 4); portaForno.add(pf);
-  const vidroF = caixa(70, 32, 2, "#3e3a44"); vidroF.position.set(0, 18, 8.5); portaForno.add(vidroF);
+  const pf = bloco(98, 64, 8, "#5a5550", 6); pf.position.set(0, 0, 4); portaForno.add(pf);
+  for (let i = 0; i < 4; i++) { const fresta = caixa(60, 3, 2, "#3a3532"); fresta.position.set(0, 16 + i * 9, 8.5); portaForno.add(fresta); }
   const alca = cilindro(3.5, 3.5, 64, "#c9c2b8", 8); alca.rotation.z = Math.PI / 2; alca.position.set(-32, 54, 12); portaForno.add(alca);
   portaForno.position.set(0, A(-26), 50);
   fogao.add(portaForno);
@@ -665,7 +819,17 @@ function construirCozinha(c) {
   const vapor = new T.Group();
   for (let i = 0; i < 3; i++) { const v = bola(9 + i * 2, mat("#ffffff", { transparent: true, opacity: 0, depthWrite: false }), 10); v.material = v.material.clone(); v.position.set(-12 + i * 12, 150 + i * 10, 4); vapor.add(v); }
   fogao.add(vapor);
+  // chaminé do fogão a lenha subindo pela parede
+  por(fogao, caixa(40, 210, 30, corF), 0, -102, -32);
   por(c, fogao, 2590, 520, -205);
+  // prateleira com potes de barro
+  const prateleira = new T.Group();
+  por(prateleira, bloco(150, 8, 34, "#a87d56", 2), 0, 0, 0);
+  for (const [x, r, h, cor] of [[-50, 16, 30, "#c47a58"], [-10, 20, 38, "#b8714f"], [32, 14, 26, "#d08c66"], [62, 12, 22, "#c47a58"]]) {
+    const pote = bola(r, cor, 14); pote.scale.y = h / (2 * r); pote.position.set(x, 8 + h / 2, 0); prateleira.add(pote);
+    const boca = cilindro(r * .55, r * .5, 6, cor, 12); boca.position.set(x, 8 + h - 2, 0); prateleira.add(boca);
+  }
+  por(c, prateleira, 2730, 300, ZP.fundo + 18);
   C3.pivos.forno = [{ obj: portaForno, eixo: "x", aberto: 1.45 }];
   C3.grupos.forno = dentroForno;
   C3.brasa = brasa;
@@ -692,12 +856,12 @@ function construirCozinha(c) {
 
 /* ---------- quarto ---------- */
 function construirQuarto(c) {
-  construirJanela(c, "quarto", 3404, 176, 140, 128, "#e3c4c0");
+  construirJanela(c, "quarto", 3404, 176, 140, 128, "#e2b66c");
   // guarda-roupa com roupas para vestir
   const armario = tocavel(new T.Group(), "coisa", "armario");
   armario.add(carcaca(150, 264, 90, "#dcb894", 8));
   const fundoA = caixa(134, 248, 2, "#8c6a4c"); fundoA.position.set(0, 8, -36); armario.add(fundoA);
-  const cabide = cilindro(2.5, 2.5, 130, "#d9c3a3", 8); cabide.rotation.z = Math.PI / 2; cabide.position.set(-65, 228, -8); armario.add(cabide);
+  const cabide = cilindro(2.5, 2.5, 130, "#d9c3a3", 8); cabide.rotation.z = Math.PI / 2; cabide.position.set(0, 228, -8); armario.add(cabide);
   for (const [i, roupa, cor] of [[0, "vestido", "#f2b630"], [1, "pijama", "#6aa8e8"], [2, "fada", "#3fb3a5"]]) {
     const x = -39 + i * 39;
     const tex = texturaSvg("roupa-" + roupa, roupaNoCabide(0, roupa, cor), "-30 258 60 130", 120, 260);
@@ -767,7 +931,8 @@ function construirNoite(c) {
   lua.position.set(600, 600, -3500);
   g.add(lua);
   const pos = [];
-  for (let i = 0; i < 260; i++) pos.push(-5000 + Math.random() * 12000, 50 + Math.random() * 2200, -3700);
+  for (let i = 0; i < 520; i++) pos.push(-5000 + Math.random() * 12000, 50 + Math.random() * 2200, -3700);
+  for (let i = 0; i < 700; i++) { const t = Math.random(); pos.push(-4000 + t * 10000 + (Math.random() - .5) * 500, 300 + t * 1300 + (Math.random() - .5) * 360, -3700); }
   const geo = new T.BufferGeometry();
   geo.setAttribute("position", new T.Float32BufferAttribute(pos, 3));
   g.add(new T.Points(geo, new T.PointsMaterial({ color: "#fff4c4", size: 3, sizeAttenuation: false })));
@@ -814,6 +979,11 @@ const aberto3D = nome => !!C3.abertos[nome];
 function sacudirArvore3D() {
   const copa = C3.grupos.copa;
   tween3D(900, t => { copa.rotation.z = Math.sin(t * Math.PI * 5) * .045 * (1 - t); });
+}
+/* a rede balança devagarinho e vai parando */
+function rede3D() {
+  const r = C3.rede;
+  tween3D(4200, t => { r.rotation.x = Math.sin(t * Math.PI * 6) * .28 * (1 - t); });
 }
 function agua3D(ms) {
   C3.agua.visible = true; C3.sujo = true;
@@ -884,7 +1054,7 @@ function arvore3D(n) {
   const g = C3.grupos.frutasArvore;
   while (g.children.length) g.remove(g.children[0]);
   FRUTAS_ARVORE.slice(0, n).forEach(([x, y]) => {
-    const m = figurinha("manga", .9);
+    const m = figurinha("umbu", .9);
     m.position.set(x - 262, A(y + 40) + 522, 70);
     g.add(m);
   });

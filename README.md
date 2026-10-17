@@ -17,7 +17,12 @@ A ideia completa, o que a criança aprende e o plano da sala dos primos estão e
 - Toque na vovó ou no vovô: com a mão vazia, ganha um abraço; com algo na mão, entrega, e a pessoa leva até o lugar certo.
 - A bolsinha (canto de baixo) guarda coisas para levar pela casa.
 - Toque na própria Manu para soltar o que ela está segurando.
-- No quintal: o Caramelo (cachorro) busca a bola se a Manu estiver com ela; o pato nada; os passarinhos voam.
+- No quintal: o Caramelo (cachorro) busca a bola se a Manu estiver com ela; o pato nada no açude; a asa-branca
+  e o galo-de-campina voam; a cabrita Mimosa bale; o calango corre do lajedo; a rede balança.
+- O cenário é a **caatinga**: umbuzeiro (sacudir dá umbu), mandacaru, xique-xique, coroa-de-frade, ipê-amarelo,
+  serras azuladas, cerca de varas, cisterna, roça de milho. Dentro, casa de taipa caiada com barrado, chão de
+  cimento queimado vermelho, fogão a lenha, potes de barro, cortinas de chita e o chapéu de couro do vovô.
+  O rádio toca um baião (e, de noite, uma cantiga lenta).
 - O sol/lua no canto de cima traz a noite: a família dá boa-noite, a vovó conta historinha, a coruja aparece.
   A cama também faz a noite chegar, e a galinha faz amanhecer.
 - O botão de tela cheia esconde a barra do navegador. Se a criança sair dela sem querer, o próximo toque volta.

@@ -33,7 +33,8 @@ const COISAS = {
   arvore: 360, horta: 670, galinha: 800, planta: 3234, sofa: 1290, quadro: 1290,
   radio: 1580, gato: 1700, filtro: 2070, pia: 2400, fogao: 2590,
   cama: 3470, abajur: 3730, armario: 3125,
-  pato: -400, passaros: -40, casinha: -250, coruja: 300,
+  pato: -400, passaros: -40, casinha: -250, coruja: 860,
+  cabra: 770, calango: -620, rede: 420, cisterna: -500, mandacaru: 860, chapeu: 1130,
   freezer: 2300, armarioPia: 2400, forno: 2590, porta: 1000,
 };
 
@@ -43,7 +44,7 @@ const VAGAS = {
   fruteira: [[2826, 414], [2843, 410], [2860, 410], [2877, 414]].map(([x, y]) => [x, y, .58]),
   bau: [[1834, 458], [1858, 454], [1882, 458], [1906, 454], [1930, 458]].map(([x, y]) => [x, y, .62]),
 };
-const FRUTAS_ARVORE = [[196, 262], [298, 230], [258, 314]];
+const FRUTAS_ARVORE = [[150, 296], [262, 304], [372, 294]]; // umbus pendurados embaixo da copa do umbuzeiro
 const CENOURAS_HORTA = [610, 676, 742];
 
 /* sombrinha embaixo dos bichos */
@@ -70,17 +71,51 @@ function desenharBichos() {
       <path d="M-12 -36 Q0 -24 12 -34" stroke="#e8e1d2" stroke-width="3" fill="none" stroke-linecap="round"/>
     </g>
   </g>`;
-  // passarinhos na cerca
+  // passarinhos do sertão no banquinho: a asa-branca e o galo-de-campina
+  const ave = (x, y, corpo, cabeca, asa, barriga, i) => `<g transform="translate(${x} ${y})"><g class="ave ave-${i}">
+      ${vol(`ellipse cx="0" cy="-12" rx="14" ry="11"`, corpo)}
+      <ellipse cx="2" cy="-7" rx="9" ry="5" fill="${barriga}"/>
+      ${vol(`circle cx="10" cy="-24" r="8"`, cabeca)}
+      <path d="M17 -25 L24 -23 L17 -21 Z" fill="#3a3330"/>
+      <circle cx="12" cy="-26" r="1.6" fill="#2a1a12"/>
+      ${vol(`path d="M-4 -16 Q-12 -26 -18 -12 Q-10 -10 -4 -16 Z"`, asa)}
+      <path d="M-12 -8 L-22 -4" stroke="${corpo}" stroke-width="4" stroke-linecap="round"/>
+    </g></g>`;
   s += `<g data-coisa="passaros">
     <rect x="-110" y="350" width="150" height="70" fill="#fff" fill-opacity="0"/>
-    ${[[-70, 400, "#e88f7a"], [0, 402, "#7fb0d8"]].map(([x, y, c], i) => `<g transform="translate(${x} ${y})"><g class="ave ave-${i}">
-      ${vol(`ellipse cx="0" cy="-12" rx="14" ry="11"`, c)}
-      ${vol(`circle cx="10" cy="-24" r="8"`, c)}
-      <path d="M17 -25 L24 -23 L17 -21 Z" fill="#f2b630"/>
-      <circle cx="12" cy="-26" r="1.6" fill="#2a1a12"/>
-      ${vol(`path d="M-4 -16 Q-12 -26 -18 -12 Q-10 -10 -4 -16 Z"`, clarear(c, .25))}
-      <path d="M-12 -8 L-22 -4" stroke="${c}" stroke-width="4" stroke-linecap="round"/>
-    </g></g>`).join("")}
+    ${ave(-70, 400, "#c9c2b8", "#bdb5aa", "#f6f2ea", "#ded8ce", 0)}
+    ${ave(0, 402, "#8e9099", "#d64a3c", "#6f717b", "#f4f1ea", 1)}
+  </g>`;
+
+  // cabrita
+  s += `<g data-coisa="cabra" transform="translate(770 512)">
+    <rect x="-46" y="-86" width="96" height="90" fill="#fff" fill-opacity="0"/>
+    ${sombraNoChao(0, 40, 0)}
+    <g class="cabra">
+      ${[-22, -10, 14, 26].map(x => vol(`rect x="${x - 3.5}" y="-30" width="7" height="30" rx="3.5"`, "#efe7da", "cil")).join("")}
+      ${vol(`ellipse cx="0" cy="-36" rx="34" ry="18"`, "#f4eee3")}
+      <path d="M-20 -46 q8 -6 16 0 q8 -6 16 0" stroke="#e2d8c8" stroke-width="3" fill="none"/>
+      ${vol(`path d="M-34 -40 Q-44 -46 -40 -52 Q-34 -46 -32 -44 Z"`, "#e9e0d2")}
+      ${vol(`ellipse cx="34" cy="-56" rx="13" ry="16" transform="rotate(20 34 -56)"`, "#f4eee3")}
+      <path d="M30 -70 Q24 -84 32 -88 M38 -70 Q38 -84 46 -86" stroke="#b8a68f" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      ${vol(`ellipse cx="20" cy="-62" rx="9" ry="4" transform="rotate(-20 20 -62)"`, "#e9e0d2")}
+      <circle cx="37" cy="-60" r="2.4" fill="#2a1a12"/>
+      <ellipse cx="44" cy="-48" rx="3" ry="2" fill="#d9a0a0"/>
+      <path d="M40 -42 q-2 8 2 12" stroke="#e2d8c8" stroke-width="3" fill="none" stroke-linecap="round"/>
+    </g>
+  </g>`;
+
+  // calango tomando sol no lajedo
+  s += `<g data-coisa="calango" transform="translate(-690 476)">
+    <rect x="-46" y="-26" width="92" height="30" fill="#fff" fill-opacity="0"/>
+    <g class="calango">
+      <path d="M-34 -4 Q-48 -2 -56 6" stroke="#9c9a63" stroke-width="5" fill="none" stroke-linecap="round"/>
+      ${vol(`ellipse cx="-6" cy="-6" rx="26" ry="7"`, "#a8a66b")}
+      ${vol(`ellipse cx="24" cy="-8" rx="11" ry="6"`, "#b3b176")}
+      <path d="M-18 -2 l-6 8 M4 -2 l6 8 M-14 -10 l-6 -6 M8 -10 l6 -6" stroke="#9c9a63" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="28" cy="-10" r="1.6" fill="#2a1a12"/>
+      <path d="M-20 -8 h4 M-10 -9 h4 M0 -8 h4" stroke="#8a884f" stroke-width="2" stroke-linecap="round"/>
+    </g>
   </g>`;
 
   // gato dormindo no tapete
@@ -109,7 +144,7 @@ function desenharBichos() {
     </g></g>
   </g>`;
   // coruja no galho da mangueira
-  s += `<g class="coruja-toque" data-coisa="coruja" transform="translate(300 300)">
+  s += `<g class="coruja-toque" data-coisa="coruja" transform="translate(925 244)">
     <rect x="-34" y="-64" width="68" height="70" fill="#fff" fill-opacity="0"/>
     <g class="coruja">
       ${vol('ellipse cx="0" cy="-26" rx="22" ry="26"', "#9a7a5c")}

@@ -25,10 +25,25 @@ A casa aparece "em corte", como uma casinha de bonecas aberta. A criança toca n
 
 | Cômodo | O que tem | O que dá para fazer |
 |---|---|---|
-| Quintal | Mangueira, horta, galinha, laguinho com pato, passarinhos, o cachorro Caramelo | Sacudir a árvore e a fruta cai; puxar cenoura; a galinha bota ovo; jogar a bola para o Caramelo buscar |
-| Sala | Sofá, rádio, baú de brinquedos, gato, retratos da família | Guardar brinquedos no baú; ligar o rádio; acordar o gato |
-| Cozinha | Geladeira, fogão com panela, pia, filtro de barro, mesa com fruteira | Guardar comida na geladeira; pôr fruta na fruteira; lavar a fruta na pia |
+| Quintal | Umbuzeiro, rede, roça de milho, horta, açude com pato, cisterna, mandacaru, lajedo com calango, cabrita, galinha, asa-branca e galo-de-campina, o cachorro Caramelo | Sacudir o umbuzeiro e o umbu cai; balançar a rede; puxar cenoura; a galinha bota ovo; jogar a bola para o Caramelo buscar |
+| Sala | Sofá com almofadas de chita, rádio, baú, gato, retratos, chapéu de couro do vovô | Guardar brinquedos no baú; ligar o rádio (baião); acordar o gato |
+| Cozinha | Geladeira, fogão a lenha com panela de barro, potes de barro, pia, filtro de barro, mesa com fruteira | Guardar comida na geladeira; pôr fruta na fruteira; lavar a fruta na pia |
 | Quarto | Cama com colcha de crochê, abajur, ursinho | Hora da soneca; acender e apagar o abajur |
+
+## Identidade: a caatinga
+
+A casa da vovó fica no sertão nordestino, e o jogo mostra a caatinga como ela é: um bioma que só existe no Brasil,
+de céu aberto, sol forte, chão de terra clara e plantas que sabem guardar água.
+
+| Elemento | Onde aparece | O que ensina |
+|---|---|---|
+| Mandacaru, xique-xique, coroa-de-frade | Quintal e paisagem | Cactos guardam água; "quando o mandacaru flora, a chuva chega" |
+| Umbuzeiro e umbu | A árvore do quintal | A árvore que guarda água nas raízes e dá fruta na seca |
+| Ipê-amarelo, arbustos secos e verdes | Paisagem ao fundo | A caatinga muda de cor com a chuva |
+| Serras, lajedos, açude, cisterna | Fundo e quintal | Como o sertão guarda a água da chuva |
+| Asa-branca, galo-de-campina, calango, cabrita | Bichos do quintal | Os bichos da região e os seus sons |
+| Casa caiada com barrado, cimento queimado, fogão a lenha, potes de barro, chita, rede, chapéu de couro | Dentro da casa | O jeito da casa de vó do interior |
+| Baião no rádio; "oxente", "arretado", "minha fulô" | Sons e falas | A música e o falar nordestino |
 
 ## O que a criança aprende brincando
 
@@ -96,5 +111,7 @@ Serviços com plano gratuito que fazem isso bem: Firebase (Google) ou Supabase. 
 - **Cenário em 3D**: casa em corte com perspectiva de verdade, móveis com volume e sombreamento de desenho,
   sol com sombras, nuvens e morros ao fundo, jardim na frente, lâmpadas que acendem à noite e vaga-lumes.
   Portas, tampas e janelas giram nas dobradiças. As pessoas e os bichos continuam em 2D por cima da cena.
+- **Identidade da caatinga** em todo o cenário, nos bichos, nos sons (baião, cabrita, calango, asa-branca)
+  e nas falas da família (veja a seção acima).
 - Emoções: as pessoas piscam, olham para o que acontece e mudam o rosto (alegre, rindo, surpresa, carinho,
   sono, curiosa, atenta) conforme a brincadeira; dançam com o rádio e bocejam de noite.

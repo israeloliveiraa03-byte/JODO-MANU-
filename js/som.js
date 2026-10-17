@@ -103,7 +103,10 @@ const guardado = () => { nota(520, 0, .18, .07); nota(780, .1, .26, .06); };
 
 /* O rádio da vovó: uma melodia simples e lenta, tocada pelo próprio navegador */
 let radioLigado = false, radioTimer = null;
-const MELODIA = [392, 440, 494, 440, 392, 330, 349, 392, 440, 392, 349, 330, 294, 330, 392, 0];
+// baião calminho, inventado para o jogo (escala de sol com o fá natural, bem nordestina)
+const MELODIA = [392, 494, 587, 523, 494, 440, 392, 349, 392, 494, 587, 698, 659, 587, 523, 494,
+                 440, 523, 659, 587, 523, 494, 440, 392, 349, 440, 523, 494, 440, 392, 392, 0];
+const ZABUMBA = [1, 0, 0, 1, 1, 0, 0, 0]; // a batida do baião: tum . . tum tum . . .
 function tocarRadio(ligar, devagar = false) {
   radioLigado = ligar;
   clearTimeout(radioTimer);
@@ -112,9 +115,13 @@ function tocarRadio(ligar, devagar = false) {
   const passo = () => {
     if (!radioLigado) return;
     const f = MELODIA[i % MELODIA.length];
-    if (f) { suave(f, .55, .045); suave(f / 2, .55, .03); }
+    if (f) suave(f, devagar ? .7 : .32, .04);
+    if (!devagar) {
+      if (ZABUMBA[i % 8]) tom("sine", 0, .18, [[0, 110], [1, 60]], .09);
+      tom("triangle", 0, .08, [[0, 2800], [1, 2800]], i % 2 ? .006 : .012);
+    } else if (i % 4 === 0) suave(f / 2 || 196, 1.2, .025);
     i++;
-    radioTimer = setTimeout(passo, devagar ? 820 : 520);
+    radioTimer = setTimeout(passo, devagar ? 760 : 270);
   };
   passo();
 }
@@ -207,6 +214,12 @@ const SONS = {
   forno:   () => { tom("triangle", 0, .3, [[0, 110], [1, 80]], .08); chiado(0, .05, .05, { f: 900 }); },
   brilho:  () => { [880, 1175, 1480, 1760].forEach((f, i) => tom("sine", i * .08, .35, [[0, f], [1, f]], .035)); },
   bocejo:  (k = 1) => { tom("sine", 0, 1.1, [[0, 420 * k], [.3, 520 * k], [1, 260 * k]], .045, { f: 900 * k, tipo: "lowpass" }); chiado(0, 1, .015, { f: 700, tipo: "lowpass" }); },
+
+  // bichos do sertão
+  mee:     () => tom("sawtooth", 0, .75, [[0, 330], [.15, 380], [.3, 340], [.45, 385], [.6, 345], [.75, 380], [1, 320]], .05, { f: 1000, q: 4 }),
+  fufu:    () => { tom("sine", 0, .22, [[0, 520], [1, 500]], .05); tom("sine", .3, .6, [[0, 500], [.4, 520], [1, 440]], .05); },
+  campina: () => { for (let i = 0; i < 5; i++) tom("sine", .1 + i * .09, .07, [[0, 2900 - i * 120], [1, 3400 - i * 120]], .03); },
+  calango: () => { for (let i = 0; i < 7; i++) chiado(i * .06, .05, .03, { f: 2600, q: 1.5 }); },
 
   // bichos
   miau:    () => tom("sawtooth", 0, .7, [[0, 480], [.25, 880], [.6, 760], [1, 540]], .06, { f: 1100, ate: 1700, q: 5 }),

@@ -14,6 +14,12 @@ const ITENS = {
       <path d="M2 -46 Q4 -52 8 -54" stroke="#6b4a2a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
       ${vol('path d="M8 -52 Q22 -60 26 -48 Q16 -46 8 -52 Z"', "#6aa65a")}`,
   },
+  umbu: {
+    nome: "umbu", tipo: "fruta",
+    d: () => `${vol('circle cx="0" cy="-17" r="17"', "#c6cf6a")}
+      <circle cx="-6" cy="-22" r="1.4" fill="#a7b04e"/><circle cx="5" cy="-12" r="1.4" fill="#a7b04e"/><circle cx="7" cy="-24" r="1.2" fill="#a7b04e"/>
+      <path d="M0 -34 Q1 -39 4 -41" stroke="#6b4a2a" stroke-width="2.4" fill="none" stroke-linecap="round"/>`,
+  },
   laranja: {
     nome: "laranja", tipo: "fruta",
     d: () => `${vol('circle cx="0" cy="-21" r="21"', "#f39a3c")}

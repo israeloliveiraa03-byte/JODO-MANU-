@@ -633,14 +633,14 @@ function tocarCoisa(nome, valeAinda, info = {}) {
         sentir("manu", "curiosa", 900);
         if (mundo.arvore <= 0) return dizer(quemEstaPerto() || "narrador", quemEstaPerto() ? "fruta" : "planta");
         mundo.arvore--;
-        const caiu = novoItem("manga", "chao", { x: 190 + Math.random() * 130 });
+        const caiu = novoItem("umbu", "chao", { x: 150 + Math.random() * 220 });
         setTimeout(() => {
           if (tem3D) arvore3D(mundo.arvore);
           desenharChao(caiu.id);
           SONS.cair();
           sentir("manu", "surpresa", 1200);
           olhar("manu", caiu.x, 520);
-          dizerNome("manga");
+          dizerNome("umbu");
           salvar();
         }, 450);
       });
@@ -825,10 +825,62 @@ function tocarCoisa(nome, valeAinda, info = {}) {
       return chegar(COISAS.passaros + 90, () => {
         virarPara(manu, COISAS.passaros);
         animarEl(el2d, "voando", 4200);
-        somDeBicho("piu", "Piu, piu!", -40, 360);
+        SONS.fufu(); setTimeout(SONS.campina, 500);
+        mostrarBalao("Fu-fuuu! Piu-piu!", "bicho", { x: -40, y: 360 });
         sentir("manu", "curiosa", 3000);
         olhar("manu", -40, 200);
         setTimeout(SONS.piu, 2400);
+      });
+
+    case "cabra":
+      return chegar(COISAS.cabra - 90, () => {
+        virarPara(manu, COISAS.cabra);
+        animarEl(el2d, "cacareja", 700);
+        somDeBicho("mee", "Mééé!", 770, 430);
+        sentir("manu", "rindo");
+        setTimeout(() => dizer("vovoo", "cabra"), 1300);
+      });
+
+    case "calango":
+      return chegar(COISAS.calango + 60, () => {
+        virarPara(manu, COISAS.calango);
+        animarEl(el2d, "corre", 2600);
+        SONS.calango();
+        sentir("manu", "surpresa", 1600);
+        olhar("manu", -690, 470);
+        dizer("narrador", "calango");
+      });
+
+    case "rede":
+      return chegar(COISAS.rede, () => {
+        if (tem3D) rede3D();
+        SONS.rangido(); setTimeout(SONS.rangido, 1400); setTimeout(SONS.rangido, 2800);
+        sentir("manu", "carinho", 3000);
+        dizer(quemEstaPerto() || "narrador", "rede");
+      });
+
+    case "cisterna":
+      return chegar(COISAS.cisterna + 40, () => {
+        virarPara(manu, -580);
+        SONS.agua(1);
+        olhar("manu", -580, 420);
+        sentir("manu", "curiosa");
+        dizer("narrador", "cisterna");
+      });
+
+    case "mandacaru":
+      return chegar(COISAS.mandacaru, () => {
+        virarPara(manu, 925);
+        olhar("manu", 925, 250);
+        sentir("manu", "curiosa", 2500);
+        dizer(quemEstaPerto() ? "vovoo" : "narrador", "mandacaru");
+      });
+
+    case "chapeu":
+      return chegar(COISAS.chapeu, () => {
+        olhar("manu", 1100, 250);
+        sentir("manu", "alegre");
+        dizer("vovoo", "chapeu");
       });
 
     case "coruja":
