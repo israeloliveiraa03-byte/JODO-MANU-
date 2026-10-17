@@ -1,2 +1,1 @@
-# observatREDE
-Dados em estudos 
+JOGO MANU
