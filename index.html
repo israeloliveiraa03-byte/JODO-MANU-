@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>O quarto da Manu</title>
-<meta name="theme-color" content="#5d6fd6">
+<title>A Casa da Vovó</title>
+<meta name="theme-color" content="#b9d3ea">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Manu">
+<meta name="apple-mobile-web-app-title" content="Casa da Vovó">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
@@ -38,6 +38,15 @@
       <stop offset="0" stop-color="#fff" stop-opacity=".6"/>
       <stop offset=".5" stop-color="#fff" stop-opacity="0"/>
       <stop offset="1" stop-color="#1a0f14" stop-opacity=".12"/>
+    </linearGradient>
+    <linearGradient id="ceuDia" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b9d3ea"/>
+      <stop offset=".8" stop-color="#e3eef0"/>
+      <stop offset="1" stop-color="#eef2e6"/>
+    </linearGradient>
+    <linearGradient id="sombraTeto" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a0f14" stop-opacity=".1"/>
+      <stop offset="1" stop-color="#1a0f14" stop-opacity="0"/>
     </linearGradient>
     <radialGradient id="iris" cx=".5" cy=".75" r=".65">
       <stop offset="0" stop-color="#fff" stop-opacity=".35"/>
@@ -72,33 +81,36 @@
   </defs>
 </svg>
 
-<!-- O QUARTO -->
-<svg id="palco" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Quarto da Manu com objetos para tocar"></svg>
+<!-- A CASA -->
+<svg id="mundo" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" role="img" aria-label="A casa da vovó"></svg>
 <div class="balao" id="balao" aria-live="polite"></div>
+<div id="soneca" aria-hidden="true"></div>
 
 <button id="voltar" type="button" hidden aria-label="Segure para voltar ao início">
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/></svg>
   <svg class="anel" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21"/></svg>
 </button>
 
+<button id="bolsa" type="button" hidden aria-label="Bolsinha">
+  <svg viewBox="0 0 48 48" aria-hidden="true">
+    <path d="M17 18c0-5 3-9 7-9s7 4 7 9" fill="none" stroke="#a8643a" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M9 18h30l-3 22a4 4 0 0 1-4 3H16a4 4 0 0 1-4-3z" fill="#e9b07a"/>
+    <path d="M9 18h30l-1 7H10z" fill="#f2c592"/>
+    <circle cx="24" cy="30" r="3.5" fill="#f6d35a"/>
+  </svg>
+</button>
+<div id="bandeja" class="bandeja" hidden></div>
+
 <!-- TELA INICIAL -->
 <div id="inicio">
   <div class="inicio-conteudo">
-    <div class="pedestal">
-      <svg id="retrato" viewBox="-120 -372 240 384" aria-hidden="true"></svg>
-    </div>
-    <div class="inicio-texto">
-      <h1>O quarto da Manu</h1>
-      <button id="brincar" type="button" class="botao-brincar">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>
-        Brincar
-      </button>
-      <button id="montar" type="button" class="botao-montar">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3 5 6l2 3 1-1v3l-4 9h16l-4-9V8l1 1 2-3-4-3c0 2-1.5 3-3 3S9 5 9 3z"/></svg>
-        Montar a Manu
-      </button>
-      <p class="nota">No quarto, segure a casinha no canto por 1 segundo para voltar para cá.</p>
-    </div>
+    <h1>A Casa da Vovó</h1>
+    <div id="familia" class="familia"></div>
+    <button id="entrar" type="button" class="botao-entrar">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/></svg>
+      Entrar
+    </button>
+    <p class="nota">Toque em alguém da família para mudar o jeito da pessoa. Dentro da casa, segure a casinha no canto por 1 segundo para voltar.</p>
   </div>
 </div>
 
@@ -108,14 +120,14 @@
     <button id="desistir" type="button" class="botao-icone" aria-label="Voltar sem salvar">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg>
     </button>
-    <h2>Montar a Manu</h2>
+    <h2 id="editor-titulo">Montar a Manu</h2>
     <button id="sortear" type="button" class="botao-icone" aria-label="Sortear um visual">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1.4" class="cheio"/><circle cx="15" cy="15" r="1.4" class="cheio"/><circle cx="15" cy="9" r="1.4" class="cheio"/><circle cx="9" cy="15" r="1.4" class="cheio"/></svg>
     </button>
     <button id="pronto" type="button" class="botao-pronto">Pronto</button>
   </header>
   <div id="vitrine" class="vitrine">
-    <svg id="previa" viewBox="-120 -372 240 384" aria-label="Como a Manu está ficando" role="img"></svg>
+    <svg id="previa" viewBox="-120 -372 240 384" aria-label="Como a personagem está ficando" role="img"></svg>
   </div>
   <section class="painel">
     <nav id="abas" class="abas" role="tablist" aria-label="O que mudar"></nav>
@@ -129,7 +141,9 @@
 <!-- A ordem importa: cada arquivo usa o que veio antes -->
 <script src="js/som.js"></script>
 <script src="js/avatar.js"></script>
-<script src="js/cena.js"></script>
+<script src="js/itens.js"></script>
+<script src="js/falas.js"></script>
+<script src="js/casa.js"></script>
 <script src="js/editor.js"></script>
 <script src="js/jogo.js"></script>
 </body>

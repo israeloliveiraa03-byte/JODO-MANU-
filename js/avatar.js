@@ -11,7 +11,7 @@
 /* ---------- 1. As cores disponíveis ---------- */
 const PALETAS = {
   pele:      ["#f6d7c3", "#ecc0a0", "#d9a27e", "#c4855f", "#a8704d", "#9a6444", "#7b4a2e", "#5a3420"],
-  corCabelo: ["#1c1410", "#3b2416", "#6b4226", "#a8442a", "#d9a54a", "#e86fa6", "#5b86d9"],
+  corCabelo: ["#1c1410", "#3b2416", "#6b4226", "#a8442a", "#d9a54a", "#8e8a86", "#e9e6e0", "#e86fa6", "#5b86d9"],
   corOlhos:  ["#2a170d", "#5a3418", "#9a6a2c", "#4f7a3a", "#3f6fa8"],
   corRoupa:  ["#f2b630", "#f39a3c", "#f08a7e", "#e4574b", "#ef7fb0", "#a98be0", "#6aa8e8", "#3fb3a5", "#7cc46a", "#f4f1ea"],
 };
@@ -20,7 +20,8 @@ const PALETAS = {
 const PADRAO = {
   pele: "#9a6444", cabelo: "coquinhos", corCabelo: "#1c1410", enfeite: "borboletas",
   olhos: "redondos", corOlhos: "#2a170d", boca: "sorriso", oculos: "nenhum",
-  roupa: "vestido", corRoupa: "#f2b630", sapatos: "descalco",
+  roupa: "vestido", corRoupa: "#f2b630", sapatos: "descalco", barba: "nenhuma",
+  adulto: false, // adultos têm pernas e corpo mais compridos
 };
 
 /* ---------- 2. Ferramentas de desenho ---------- */
@@ -192,6 +193,29 @@ const CABELOS = {
   },
 };
 
+Object.assign(CABELOS, {
+  coqueVo: {
+    nome: "Coque de vó",
+    tras: c => vol(`circle cx="0" cy="-306" r="25"`, c) + vol(`ellipse cx="0" cy="-246" rx="60" ry="62"`, c),
+    frente: c => franja(c, false) + vol(`ellipse cx="-50" cy="-258" rx="13" ry="18"`, c) + vol(`ellipse cx="50" cy="-258" rx="13" ry="18"`, c) +
+      `<path d="M-40 -272 Q-24 -284 -6 -290 M40 -272 Q24 -284 6 -290 M-30 -300 Q0 -310 30 -300" stroke="${clarear(c, .25)}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`,
+    enfeites: [[-16, -318, -15]],
+  },
+  social: {
+    nome: "Curto de lado",
+    tras: c => vol(`ellipse cx="0" cy="-246" rx="57" ry="59"`, c),
+    frente: c => vol(`path d="M-56 -236 C-62 -318 62 -318 56 -236 C54 -258 44 -270 26 -272 C6 -274 -14 -282 -22 -270 C-36 -274 -52 -262 -56 -236 Z"`, c) +
+      `<path d="M-22 -270 Q-8 -294 30 -292" stroke="${clarear(c, .3)}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`,
+    enfeites: [[-40, -296, -15], [40, -296, 15]],
+  },
+  calvo: {
+    nome: "Careca",
+    tras: c => vol(`ellipse cx="-52" cy="-246" rx="12" ry="24"`, c) + vol(`ellipse cx="52" cy="-246" rx="12" ry="24"`, c),
+    frente: () => `<ellipse cx="-14" cy="-280" rx="16" ry="7" fill="#fff" fill-opacity=".28" transform="rotate(-15 -14 -280)"/>`,
+    enfeites: [[-50, -268, -30], [50, -268, 30]],
+  },
+});
+
 /* ---------- 5. Enfeites de cabelo ---------- */
 const ENFEITES = {
   nenhum: { nome: "Nenhum", d: () => "" },
@@ -232,6 +256,16 @@ const OCULOS = {
       <polygon points="${pontosEstrela(-20, -236, 20, .55)}" fill="#ffd23f" fill-opacity=".6" stroke="#e6a817" stroke-width="3" stroke-linejoin="round"/>
       <polygon points="${pontosEstrela(20, -236, 20, .55)}" fill="#ffd23f" fill-opacity=".6" stroke="#e6a817" stroke-width="3" stroke-linejoin="round"/>
       <path d="M-4 -240 L4 -240" stroke="#e6a817" stroke-width="3" stroke-linecap="round"/>` },
+};
+
+/* ---------- 6b. Barba e bigode ---------- */
+const BARBAS = {
+  nenhuma: { nome: "Sem barba", d: () => "" },
+  bigode: { nome: "Bigode", d: e => vol(`path d="M0 -216 C-8 -222 -26 -222 -30 -208 C-22 -212 -10 -210 0 -212 C10 -210 22 -212 30 -208 C26 -222 8 -222 0 -216 Z"`, e.corCabelo) },
+  barba: { nome: "Barba", d: e => vol(`path d="M-54 -238 Q-54 -184 0 -176 Q54 -184 54 -238 Q46 -204 26 -200 Q0 -194 -26 -200 Q-46 -204 -54 -238 Z"`, e.corCabelo) +
+      vol(`path d="M0 -216 C-8 -222 -26 -222 -28 -209 C-20 -212 -10 -210 0 -212 C10 -210 20 -212 28 -209 C26 -222 8 -222 0 -216 Z"`, e.corCabelo) },
+  cavanhaque: { nome: "Cavanhaque", d: e => vol(`path d="M-12 -196 Q0 -192 12 -196 Q12 -180 0 -176 Q-12 -180 -12 -196 Z"`, e.corCabelo) +
+      vol(`path d="M0 -216 C-6 -221 -20 -221 -22 -210 C-15 -213 -8 -211 0 -212 C8 -211 15 -213 22 -210 C20 -221 6 -221 0 -216 Z"`, e.corCabelo) },
 };
 
 /* ---------- 7. Roupas ----------
@@ -292,12 +326,13 @@ const ROUPAS = {
   },
   pijama: {
     nome: "Pijama", manga: "longa", pernas: false, corManga: c => c,
+    calca: (c, x, alt) => vol(`rect x="${x - 17}" y="${-132 - alt}" width="34" height="${118 + alt}" rx="13"`, c, "cil") +
+      bolinhas([[x - 6, -110 - alt * .6], [x + 6, -70 - alt * .3], [x - 4, -36]], clarear(c, .7)) +
+      vol(`rect x="${x - 17}" y="-24" width="34" height="10" rx="5"`, clarear(c, .4)),
+    quadril: (c, alt) => vol(`rect x="-38" y="${-136 - alt}" width="76" height="34" rx="12"`, c, "volSuave"),
     frente: c => {
       const pontos = clarear(c, .7);
-      let s = vol(`path d="M-38 -134 L38 -134 L37 -14 L6 -14 L0 -104 L-6 -14 L-37 -14 Z"`, c, "volSuave");
-      s += bolinhas([[-24, -112], [22, -116], [-28, -80], [26, -84], [-22, -48], [24, -52], [-26, -24], [24, -26]], pontos);
-      s += vol(`rect x="-38" y="-24" width="33" height="10" rx="5"`, clarear(c, .4)) + vol(`rect x="5" y="-24" width="33" height="10" rx="5"`, clarear(c, .4));
-      s += vol(`path d="M-37 -188 Q0 -196 37 -188 L40 -124 Q0 -118 -40 -124 Z"`, c, "volSuave");
+      let s = vol(`path d="M-37 -188 Q0 -196 37 -188 L40 -124 Q0 -118 -40 -124 Z"`, c, "volSuave");
       s += bolinhas([[-20, -172], [16, -176], [-4, -152], [26, -146], [-28, -140]], pontos);
       s += vol(`path d="M-14 -190 Q0 -180 14 -190 Q0 -186 -14 -190 Z"`, clarear(c, .4));
       return s;
@@ -323,55 +358,114 @@ const ROUPAS = {
   },
 };
 
+Object.assign(ROUPAS, {
+  avental: {
+    nome: "Vestido e avental", manga: "curta", pernas: true, corManga: c => c,
+    frente: (c, e, alt = 0) => {
+      const bainha = n1(-80 + alt * .75), d = escurecer(c, .2);
+      let s = vol(`path d="M-40 -146 Q0 -152 40 -146 L66 ${bainha} Q0 ${bainha + 14} -66 ${bainha} Z"`, c, "volSuave");
+      s += bolinhas([[-40, -120], [-6, -112], [30, -126], [-50, bainha - 20], [44, bainha - 24], [10, bainha - 6]], clarear(c, .55), 3.5);
+      s += vol(`path d="M-38 -188 Q0 -196 38 -188 L41 -142 Q0 -148 -41 -142 Z"`, c, "volSuave");
+      s += `<path d="M-41 -144 Q0 -150 41 -144" stroke="${d}" stroke-width="3" fill="none"/>`;
+      s += vol(`path d="M-30 -146 L30 -146 L40 ${n1(bainha - 12)} Q0 ${n1(bainha - 2)} -40 ${n1(bainha - 12)} Z"`, "#fbfaf6", "volSuave");
+      s += vol(`path d="M-20 -182 L20 -182 L22 -146 L-22 -146 Z"`, "#fbfaf6", "volSuave");
+      s += `<path d="M-20 -182 L-30 -190 M20 -182 L30 -190" stroke="#fbfaf6" stroke-width="5" stroke-linecap="round"/>`;
+      s += vol(`rect x="-16" y="${n1(-118 + alt * .2)}" width="32" height="22" rx="6"`, clarear(c, .7), "volSuave");
+      s += `<path d="M-30 -146 Q0 -142 30 -146" stroke="${clarear(c, .4)}" stroke-width="4" fill="none"/>`;
+      return s;
+    },
+  },
+  camisa: {
+    nome: "Camisa e calça", manga: "curta", pernas: false, corManga: c => c,
+    calca: (c, x, alt) => vol(`rect x="${x - 17}" y="${-132 - alt}" width="34" height="${124 + alt}" rx="11"`, "#4f6290", "cil"),
+    quadril: (c, alt) => vol(`rect x="-38" y="${-138 - alt}" width="76" height="36" rx="10"`, "#4f6290", "volSuave") +
+      `<rect x="-38" y="${-138 - alt}" width="76" height="7" rx="3" fill="#3b4a70"/>`,
+    frente: c => {
+      let s = vol(`path d="M-38 -188 Q0 -196 38 -188 L41 -134 Q0 -128 -41 -134 Z"`, c, "volSuave");
+      s += `<path d="M0 -190 L0 -134" stroke="${escurecer(c, .2)}" stroke-width="2"/>`;
+      s += [-176, -160, -144].map(y => `<circle cx="5" cy="${y}" r="2.6" fill="${clarear(c, .6)}"/>`).join("");
+      s += vol(`path d="M-16 -194 L0 -182 L-4 -172 L-20 -186 Z"`, clarear(c, .25)) + vol(`path d="M16 -194 L0 -182 L4 -172 L20 -186 Z"`, clarear(c, .25));
+      s += vol(`rect x="-30" y="-176" width="16" height="14" rx="3"`, escurecer(c, .1), "volSuave");
+      return s;
+    },
+  },
+});
+
 /* ---------- 8. Sapatos ---------- */
+// cada sapato é desenhado um pé de cada vez (x = posição do pé), para os pés poderem andar
 const SAPATOS = {
-  descalco: { nome: "Descalça", d: e => [-18, 18].map(x => vol(`ellipse cx="${x}" cy="-7" rx="14" ry="8"`, e.pele)).join("") },
-  tenis: { nome: "Tênis", d: e => [-18, 18].map(x =>
+  descalco: { nome: "Descalça", d: (e, x) => vol(`ellipse cx="${x}" cy="-7" rx="14" ry="8"`, e.pele) },
+  tenis: { nome: "Tênis", d: (e, x) =>
       vol(`ellipse cx="${x}" cy="-10" rx="16" ry="11"`, "#fbfbf8") +
       `<rect x="${x - 17}" y="-5" width="34" height="5.5" rx="2.7" fill="#e3ded6"/>` +
-      `<path d="M${x - 9} -15 L${x + 7} -8" stroke="${e.corRoupa === "#f4f1ea" ? "#6aa8e8" : e.corRoupa}" stroke-width="4" stroke-linecap="round"/>`).join("") },
-  sandalia: { nome: "Sandália", d: e => [-18, 18].map(x =>
+      `<path d="M${x - 9} -15 L${x + 7} -8" stroke="${e.corRoupa === "#f4f1ea" ? "#6aa8e8" : e.corRoupa}" stroke-width="4" stroke-linecap="round"/>` },
+  sandalia: { nome: "Sandália", d: (e, x) =>
       vol(`ellipse cx="${x}" cy="-7" rx="14" ry="8"`, e.pele) +
       `<rect x="${x - 15}" y="-3" width="30" height="4" rx="2" fill="#a8643a"/>` +
-      vol(`rect x="${x - 12}" y="-13" width="24" height="6" rx="3"`, "#f27d9a")).join("") },
-  botinha: { nome: "Botinha", d: () => [-17, 17].map(x =>
+      vol(`rect x="${x - 12}" y="-13" width="24" height="6" rx="3"`, "#f27d9a") },
+  botinha: { nome: "Botinha", d: (e, x) =>
       vol(`path d="M${x - 11} -36 L${x + 11} -36 L${x + 12} -12 Q${x + 18} -9 ${x + 17} 0 L${x - 17} 0 Q${x - 18} -9 ${x - 12} -12 Z"`, "#e4574b") +
-      vol(`rect x="${x - 13}" y="-40" width="26" height="8" rx="4"`, "#f27166")).join("") },
+      vol(`rect x="${x - 13}" y="-40" width="26" height="8" rx="4"`, "#f27166") },
+  chinelo: { nome: "Chinelo", d: (e, x) =>
+      vol(`ellipse cx="${x}" cy="-3" rx="17" ry="5"`, "#3fb3a5") + vol(`ellipse cx="${x}" cy="-8" rx="13" ry="7"`, e.pele) +
+      `<path d="M${x - 9} -8 L${x} -14 L${x + 9} -8" stroke="#2b8f84" stroke-width="3.5" fill="none" stroke-linecap="round"/>` },
+  sapato: { nome: "Sapato", d: (e, x) =>
+      vol(`path d="M${x - 15} -2 Q${x - 16} -18 ${x - 2} -18 Q${x + 12} -17 ${x + 18} -6 Q${x + 19} 0 ${x + 12} 0 L${x - 13} 0 Z"`, "#6b4226") +
+      `<rect x="${x - 16}" y="-3" width="35" height="4" rx="2" fill="#3f2616"/>` },
 };
 
 /* ---------- 9. Montar o corpo inteiro ---------- */
-function perna(x, e) {
-  return vol(`rect x="${x - 10}" y="-98" width="20" height="92" rx="10"`, e.pele, "cil");
+function perna(x, e, alt) {
+  return vol(`rect x="${x - 10}" y="${-98 - alt}" width="20" height="${92 + alt}" rx="10"`, e.pele, "cil");
 }
 
-function braco(e, roupa) {
+function braco(e, roupa, mao, comp = 80) {
   const cm = roupa.corManga(e.corRoupa);
-  let s = vol(`rect x="-8.5" y="0" width="17" height="80" rx="8.5"`, e.pele, "cil");
+  let s = vol(`rect x="-8.5" y="0" width="17" height="${comp}" rx="8.5"`, e.pele, "cil");
   if (roupa.manga === "curta") s += vol(`rect x="-10.5" y="-6" width="21" height="30" rx="10"`, cm, "cil");
-  if (roupa.manga === "longa") s += vol(`rect x="-10" y="-6" width="20" height="78" rx="10"`, cm, "cil") +
-                                   vol(`rect x="-10.5" y="64" width="21" height="9" rx="4.5"`, clarear(cm, .4), "cil");
-  return s + vol(`circle cx="0" cy="80" r="10.5"`, e.pele);
+  if (roupa.manga === "longa") s += vol(`rect x="-10" y="-6" width="20" height="${comp - 2}" rx="10"`, cm, "cil") +
+                                   vol(`rect x="-10.5" y="${comp - 16}" width="21" height="9" rx="4.5"`, clarear(cm, .4), "cil");
+  s += vol(`circle cx="0" cy="${comp}" r="10.5"`, e.pele);
+  // a "mão" é um lugar vazio onde o jogo coloca o objeto que a personagem está segurando
+  if (mao) s += `<g class="mao" transform="translate(0 ${comp + 4}) rotate(12)"></g>`;
+  return s;
 }
+
+/* Tamanho de adulto: pernas mais compridas e tudo um pouco maior */
+const ADULTO = { alt: 66, escala: 1.1 };
+const medidas = e => e.adulto ? ADULTO : { alt: 0, escala: 1 };
 
 /* Desenha a personagem na ordem certa: o que está atrás primeiro,
    o que está na frente por último (como camadas de papel). */
 function desenharAvatar(ficha, opcoes = {}) {
   const e = { ...PADRAO, ...ficha };
   const cab = CABELOS[e.cabelo], roupa = ROUPAS[e.roupa], enf = ENFEITES[e.enfeite];
-  let s = `<rect x="-95" y="-350" width="190" height="350" fill="#fff" fill-opacity="0"/>`; // área de toque
+  const { alt, escala } = medidas(e);
+  const sobe = `transform="translate(0 ${-alt})"`;
+  let s = `<g class="corpo" transform="scale(${escala})">`;
+  s += `<rect x="-72" y="${-350 - alt}" width="144" height="${350 + alt}" fill="#fff" fill-opacity="0"/>`; // área de toque
   if (opcoes.sombra !== false) s += `<ellipse cx="0" cy="-2" rx="58" ry="10" fill="url(#sombraChao)"/>`;
-  s += cab.tras(e.corCabelo);
-  if (roupa.tras) s += roupa.tras(e.corRoupa);
-  if (roupa.pernas) s += perna(-15, e) + perna(15, e);
-  s += SAPATOS[e.sapatos].d(e);
-  s += `<g transform="translate(-42 -180) rotate(12)">${braco(e, roupa)}</g>`;
-  s += `<g transform="translate(42 -180) rotate(-12)"><g class="braco">${braco(e, roupa)}</g></g>`;
+  s += `<g ${sobe}>${cab.tras(e.corCabelo)}${roupa.tras ? roupa.tras(e.corRoupa) : ""}</g>`;
+  // cada perna (com seu sapato) fica num grupo próprio: é isso que deixa ela andar
+  for (const [lado, px, pe] of [["e", -15, -18], ["d", 15, 18]]) {
+    s += `<g class="perna perna-${lado}">`;
+    s += roupa.calca ? roupa.calca(e.corRoupa, px, alt) : perna(px, e, alt);
+    s += SAPATOS[e.sapatos].d(e, pe) + "</g>";
+  }
+  if (roupa.quadril) s += roupa.quadril(e.corRoupa, alt);
+  s += `<g ${sobe}>`;
+  const comp = 80 + alt * .35;
+  s += `<g transform="translate(-42 -180) rotate(12)">${braco(e, roupa, false, comp)}</g>`;
+  s += `<g transform="translate(42 -180) rotate(-12)"><g class="braco">${braco(e, roupa, true, comp)}</g></g>`;
   s += vol(`rect x="-10" y="-200" width="20" height="22" rx="8"`, e.pele, "cil");
-  s += roupa.frente(e.corRoupa, e);
+  s += roupa.frente(e.corRoupa, e, alt);
   s += rosto(e);
+  if (e.adulto) s += `<path d="M-22 -214 q-4 6 -1 11 M22 -214 q4 6 1 11" stroke="${escurecer(e.pele, .35)}" stroke-opacity=".5" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+  s += BARBAS[e.barba].d(e);
   s += cab.frente(e.corCabelo);
   s += enf.tiara ? enf.d() : cab.enfeites.map(([x, y, r]) => enf.d(x, y, r)).join("");
   s += OCULOS[e.oculos].d();
+  s += "</g></g>";
   return s;
 }
 
@@ -383,6 +477,14 @@ const RECORTES = {
   corpo: "-112 -236 224 244",
   pes: "-52 -50 104 62",
 };
+// para adultos, o recorte sobe e cresce junto com o corpo
+function recorteDe(nome, ficha) {
+  const { alt, escala: k } = medidas({ ...PADRAO, ...ficha });
+  let [x, y, w, h] = RECORTES[nome].split(" ").map(Number);
+  if (nome === "inteira" || nome === "corpo") { y -= alt; h += alt; }
+  else if (nome !== "pes") y -= alt;
+  return [x, y, w, h].map(v => n1(v * k)).join(" ");
+}
 
 /* As abas do editor */
 const CATEGORIAS = [
@@ -392,22 +494,24 @@ const CATEGORIAS = [
   { id: "olhos",   nome: "Olhos",   cores: "corOlhos",  opcoes: OLHOS, recorte: "rostoPerto" },
   { id: "boca",    nome: "Boca",    opcoes: BOCAS, recorte: "rostoPerto" },
   { id: "oculos",  nome: "Óculos",  opcoes: OCULOS, recorte: "rostoPerto" },
+  { id: "barba",   nome: "Barba",   opcoes: BARBAS, recorte: "rostoPerto" },
   { id: "roupa",   nome: "Roupa",   cores: "corRoupa",  opcoes: ROUPAS, recorte: "corpo" },
   { id: "sapatos", nome: "Sapatos", opcoes: SAPATOS, recorte: "pes" },
 ];
 
 /* Confere se uma ficha salva ainda é válida (útil quando o jogo ganhar opções novas) */
-function fichaValida(f) {
-  const ok = { ...PADRAO };
+function fichaValida(f, base = PADRAO) {
+  const ok = { ...PADRAO, ...base };
   if (!f || typeof f !== "object") return ok;
   for (const cat of CATEGORIAS) {
     if (cat.opcoes && f[cat.id] in cat.opcoes) ok[cat.id] = f[cat.id];
     if (cat.cores && PALETAS[cat.cores].includes(f[cat.cores])) ok[cat.cores] = f[cat.cores];
   }
+  if (typeof f.adulto === "boolean") ok.adulto = f.adulto;
   return ok;
 }
 
-function fichaSorteada() {
+function fichaSorteada(adulto = false) {
   const sorteia = lista => lista[Math.floor(Math.random() * lista.length)];
   const f = {};
   for (const cat of CATEGORIAS) {
@@ -415,5 +519,7 @@ function fichaSorteada() {
     if (cat.cores) f[cat.cores] = sorteia(PALETAS[cat.cores]);
   }
   if (Math.random() < .6) f.oculos = "nenhum"; // óculos aparecem às vezes, não sempre
+  if (!adulto || Math.random() < .5) f.barba = "nenhuma";
+  f.adulto = adulto;
   return f;
 }

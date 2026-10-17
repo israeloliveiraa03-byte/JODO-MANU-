@@ -24,6 +24,15 @@ async function destravarSom() {
   } catch (e) { /* sem som de efeitos, o jogo continua */ }
 }
 
+// Enquanto não há gravação, cada pessoa ganha um "jeito" diferente da voz do celular
+const JEITOS_DE_VOZ = {
+  mae:     { tom: 1.35, ritmo: .9 },
+  pai:     { tom: .7,  ritmo: .9 },
+  vovo:    { tom: 1.15, ritmo: .82 },
+  vovoo:   { tom: .6,  ritmo: .8 },
+  crianca: { tom: 1.7, ritmo: .95 },
+};
+
 function falarTexto(texto, voz) {
   return new Promise(pronto => {
     let feito = false;
@@ -33,8 +42,9 @@ function falarTexto(texto, voz) {
     u.lang = "pt-BR";
     const br = vozesPt.find(v => v.lang.replace("_", "-").toLowerCase() === "pt-br") || vozesPt[0];
     if (br) u.voice = br;
-    u.pitch = voz === "pai" ? .7 : 1.4;   // grave para o pai, agudo para a mãe
-    u.rate = .9;
+    const jeito = JEITOS_DE_VOZ[voz] || JEITOS_DE_VOZ.mae;
+    u.pitch = jeito.tom;
+    u.rate = jeito.ritmo;
     u.onend = fim;
     u.onerror = fim;
     setTimeout(fim, 900 + texto.length * 130); // segurança, caso o celular não avise que terminou
@@ -75,6 +85,38 @@ function nota(freq, inicio, dur, vol) {
   o.start(t);
   o.stop(t + dur + .02);
 }
-const pop = () => nota(420, 0, .18, .2);
-const plim = () => nota(780, 0, .16, .12);
-const sininho = () => { nota(660, 0, .3, .15); nota(990, .12, .4, .12); };
+// sons baixinhos e curtos: o jogo é calmo
+const pop = () => nota(380, 0, .14, .08);
+const plim = () => nota(700, 0, .16, .07);
+const sininho = () => { nota(620, 0, .3, .07); nota(930, .14, .4, .06); };
+const guardado = () => { nota(520, 0, .18, .07); nota(780, .1, .26, .06); };
+
+/* O rádio da vovó: uma melodia simples e lenta, tocada pelo próprio navegador */
+let radioLigado = false, radioTimer = null;
+const MELODIA = [392, 440, 494, 440, 392, 330, 349, 392, 440, 392, 349, 330, 294, 330, 392, 0];
+function tocarRadio(ligar) {
+  radioLigado = ligar;
+  clearTimeout(radioTimer);
+  if (!ligar || !audioCtx) return;
+  let i = 0;
+  const passo = () => {
+    if (!radioLigado) return;
+    const f = MELODIA[i % MELODIA.length];
+    if (f) { suave(f, .55, .045); suave(f / 2, .55, .03); }
+    i++;
+    radioTimer = setTimeout(passo, 520);
+  };
+  passo();
+}
+function suave(freq, dur, vol) {
+  const t = audioCtx.currentTime;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = "triangle";
+  o.frequency.value = freq;
+  g.gain.setValueAtTime(.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + .04);
+  g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(g).connect(audioCtx.destination);
+  o.start(t);
+  o.stop(t + dur + .05);
+}

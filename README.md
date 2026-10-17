@@ -1,33 +1,32 @@
-# Jogo da Manu — A Casa de Todas as Histórias
+# A Casa da Vovó
 
-Jogo de casinha para a Manu (2 anos), feito para o celular, com as vozes reais da mãe e do pai.
+Jogo calmo de casinha para a Manu (e, depois, para os primos), com a família de verdade e as vozes dela.
 
-**Jogar:** https://israeloliveiraa03-byte.github.io/JODO-MANU-/
+**Jogar:** https://israeloliveiraa03-byte.github.io/JODO-MANU-/ (melhor com o celular deitado)
 
-## O que tem agora
+A ideia completa, o que a criança aprende e o plano da sala dos primos estão em [PROJETO.md](PROJETO.md).
 
-- **Montar a Manu**: ateliê para montar a personagem (pele, cabelo, enfeite, olhos, boca, óculos, roupa e sapatos).
-  A escolha fica guardada no celular.
-- **O quarto**: seis coisas para tocar (a Manu, o gato, o bolo, a cama, a caixa surpresa e a janela).
-  Cada toque faz o objeto se mexer e dizer uma fala. Não existe erro: tocar em qualquer lugar solta confetes.
-- Para sair do quarto, segure a casinha no canto da tela por 1 segundo.
+## Como se joga
+
+- Toque no chão e a Manu anda até lá.
+- Toque numa coisa e ela vai até a coisa e pega.
+- Com algo na mão, toque na geladeira, na fruteira ou no baú para guardar. O lugar certo brilha de leve.
+- Toque na vovó ou no vovô: com a mão vazia, ganha um abraço; com algo na mão, entrega, e a pessoa leva até o lugar certo.
+- A bolsinha (canto de baixo) guarda coisas para levar pela casa.
+- Toque na própria Manu para soltar o que ela está segurando.
+- Para sair, segure a casinha no canto por 1 segundo.
 
 ## Como o projeto está organizado
 
 | Arquivo | O que faz |
 |---|---|
-| `index.html` | O esqueleto: as três telas (início, quarto, ateliê) e a luz/sombra dos desenhos |
-| `estilo.css` | A aparência: cores, botões, animações |
-| `js/som.js` | Os sons e as vozes |
-| `js/avatar.js` | Como a personagem é desenhada e todas as opções do ateliê |
+| `index.html` | As telas (início, casa, ateliê) e a luz/sombra dos desenhos |
+| `estilo.css` | A aparência e as animações |
+| `js/falas.js` | **As falas da família** — é aqui que entram as gravações |
+| `js/itens.js` | As coisas que dá para pegar |
+| `js/casa.js` | Os desenhos da casa e onde fica cada coisa |
+| `js/avatar.js` | Como as pessoas são desenhadas e as opções do ateliê |
 | `js/editor.js` | O ateliê de personagem |
-| `js/cena.js` | Os desenhos do quarto |
-| `js/jogo.js` | O que acontece em cada toque, e as falas (lista `CENA`) |
-| `audio/` | Onde entram as gravações da família |
-
-Para mudar ou acrescentar falas, mexa na lista `CENA`, no começo de `js/jogo.js`.
-Para acrescentar uma opção nova no ateliê (um penteado, uma roupa), acrescente um item em `js/avatar.js`.
-
-## Dica
-
-No celular, abra o link e use "Adicionar à tela inicial": o jogo passa a abrir em tela cheia, como um app.
+| `js/som.js` | Vozes, sons e o rádio |
+| `js/jogo.js` | O motor: andar, pegar, guardar, reações, salvar |
+| `audio/` | As gravações da família |

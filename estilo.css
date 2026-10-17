@@ -1,21 +1,20 @@
 /* =========================================================
    estilo.css — A APARÊNCIA DO JOGO
-   Visual de brinquedo macio: cores claras, degradês suaves,
-   sombras fofas e cantos bem arredondados.
+   Casa da vovó: cores suaves de dia claro, movimentos lentos,
+   nada pisca. Brinquedo macio, mas calmo.
    ========================================================= */
 :root {
-  --ceu-1: #8fb4ff;
-  --ceu-2: #c9b8ff;
-  --ceu-3: #ffd9ec;
-  --tinta: #2e2850;
-  --tinta-suave: #6c6690;
+  --ceu-1: #b9d3ea;
+  --ceu-2: #e8efe6;
+  --tinta: #2f2a45;
+  --tinta-suave: #6d6884;
   --cartao: #ffffff;
-  --cartao-2: #f3f1fb;
-  --acento: #22a99c;
-  --acento-escuro: #158276;
-  --amarelo: #ffc53d;
-  --amarelo-escuro: #e19a12;
-  --coral: #f08a7e;
+  --cartao-2: #f4f2f8;
+  --acento: #3d9c90;
+  --acento-escuro: #2b7a70;
+  --mel: #f2c46a;
+  --mel-escuro: #d49b2c;
+  --coral: #e79a88;
   --fonte: "Baloo 2", "Trebuchet MS", "Verdana", sans-serif;
   color-scheme: light;
   box-sizing: border-box;
@@ -28,13 +27,13 @@ html, body { height: 100%; }
 body {
   margin: 0;
   overflow: hidden;
-  background: #cfe0f5;
+  background: var(--ceu-1);
   color: var(--tinta);
   font-family: var(--fonte);
   padding-block: 0;
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
-  touch-action: manipulation;
+  touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -45,120 +44,137 @@ button:focus-visible { outline: 3px solid var(--acento); outline-offset: 3px; }
 .defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 
 /* =========================================================
-   O QUARTO
+   A CASA
    ========================================================= */
-#palco { display: block; width: 100%; height: 100%; }
-.anim { transform-box: fill-box; transform-origin: 50% 100%; }
-.objeto { cursor: pointer; }
-.pula { animation: pula .7s ease-out; }
-.balanca { animation: balanca .8s ease-in-out; }
-.afunda { animation: afunda .9s ease-in-out; }
-.treme { animation: treme .5s ease-in-out; }
-.brilha .sol { animation: sol 1s ease-in-out; transform-box: fill-box; transform-origin: center; }
+#mundo { display: block; width: 100%; height: 100%; }
+[data-coisa], [data-lugar], [data-item], [data-pessoa] { cursor: pointer; }
 
-@keyframes pula {
-  0% { transform: translateY(0); }
-  30% { transform: translateY(-30px) scale(1.03); }
-  55% { transform: translateY(0) scale(1.05, .95); }
-  75% { transform: translateY(-8px); }
-  100% { transform: none; }
-}
-@keyframes balanca {
-  0%, 100% { transform: rotate(0); }
-  20% { transform: rotate(-6deg); }
-  40% { transform: rotate(6deg); }
-  60% { transform: rotate(-4deg); }
-  80% { transform: rotate(3deg); }
-}
-@keyframes afunda { 0%, 100% { transform: none; } 40% { transform: scale(1.03, .94); } }
-@keyframes treme {
-  0%, 100% { transform: none; }
-  25% { transform: rotate(-5deg); }
-  50% { transform: rotate(5deg); }
-  75% { transform: rotate(-3deg); }
-}
-@keyframes sol { 0%, 100% { transform: scale(1) rotate(0); } 50% { transform: scale(1.35) rotate(40deg); } }
+/* --- pessoas: andar, respirar, abaixar, abraçar --- */
+.pessoa .perna { transform-box: fill-box; transform-origin: 50% 0; }
+.pessoa .bob { transform-box: fill-box; transform-origin: 50% 100%; animation: respira 4s ease-in-out infinite; }
+.andando .perna-e { animation: passo .6s ease-in-out infinite; }
+.andando .perna-d { animation: passo .6s ease-in-out -.3s infinite; }
+.andando .bob { animation: sobeDesce .3s ease-in-out infinite alternate; }
+.agacha .bob { animation: agacha .55s ease-in-out; }
+.abraco .bob { animation: abraco 1.3s ease-in-out; }
+.pulinho .bob { animation: pulinho .65s ease-out; }
+@keyframes respira { 50% { transform: scale(1, 1.012); } }
+@keyframes passo { 0%, 100% { transform: rotate(12deg); } 50% { transform: rotate(-12deg); } }
+@keyframes sobeDesce { to { transform: translateY(-5px); } }
+@keyframes agacha { 45% { transform: scale(1.04, .86); } }
+@keyframes abraco { 30%, 70% { transform: rotate(8deg); } }
+@keyframes pulinho { 35% { transform: translateY(-26px); } 70% { transform: translateY(0) scale(1.03, .97); } }
 
-/* braço direito acenando: gira para cima, para fora do corpo */
 .braco { transform-box: fill-box; transform-origin: 50% 5%; }
 .acenando .braco { animation: acena 1.6s ease-in-out; }
 @keyframes acena {
   0%, 100% { transform: rotate(0); }
-  18% { transform: rotate(-150deg); }
-  34% { transform: rotate(-118deg); }
-  50% { transform: rotate(-155deg); }
-  66% { transform: rotate(-118deg); }
-  82% { transform: rotate(-150deg); }
+  20% { transform: rotate(-145deg); }
+  40% { transform: rotate(-120deg); }
+  60% { transform: rotate(-145deg); }
+  80% { transform: rotate(-120deg); }
 }
 
-.rabo { transform-box: fill-box; transform-origin: 100% 100%; animation: rabo 2.4s ease-in-out infinite; }
-.pula .rabo { animation: rabo .35s ease-in-out 3; }
-@keyframes rabo { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(14deg); } }
+/* --- itens --- */
+.caindo { animation: cai .6s cubic-bezier(.55, 0, .8, .6); }
+@keyframes cai { from { transform: translateY(-200px); } 85% { transform: translateY(0); } 92% { transform: translateY(-6px); } }
 
-.chama { transform-box: fill-box; transform-origin: 50% 100%; animation: chama .9s ease-in-out infinite; }
-.balanca .chama { animation: chamaGrande .8s ease-in-out; }
-@keyframes chama { 0%, 100% { transform: scale(1); } 50% { transform: scale(.9, 1.08); } }
-@keyframes chamaGrande { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.6); } }
+/* --- geladeira e baú abrem devagar --- */
+.porta-geladeira { transform-box: fill-box; transform-origin: 100% 50%; transition: transform .7s ease; }
+.geladeira.aberta .porta-geladeira { transform: scaleX(-.32); }
+.tampa-bau { transform-box: fill-box; transform-origin: 0% 100%; transition: transform .7s ease; }
+.bau.aberto .tampa-bau { transform: rotate(-34deg); }
+#dentro-bau { opacity: 0; transition: opacity .4s; }
+.bau.aberto #dentro-bau { opacity: 1; }
 
-.tampa { transform-box: fill-box; transform-origin: 50% 100%; transition: transform .45s cubic-bezier(.3, 1.6, .5, 1); }
-.aberta .tampa { transform: translate(-38px, -66px) rotate(-28deg); }
-.urso { transform: translateY(48px); transition: transform .45s cubic-bezier(.3, 1.7, .5, 1); }
-.aberta .urso { transform: translateY(-4px); }
+/* a dica: o lugar certo do que a Manu segura ganha uma luz bem suave */
+.dica { animation: dica 2.6s ease-in-out infinite; }
+@keyframes dica { 50% { filter: drop-shadow(0 0 10px rgba(255, 236, 170, .95)); } }
 
-#ceu { fill: #9fd3f5; transition: fill .8s; }
-.noite #ceu { fill: #22305e; }
-#escuro { opacity: 0; transition: opacity .8s; pointer-events: none; }
-.noite #escuro { opacity: .48; }
-.sol, .nuvem { transition: opacity .6s; }
-.noite .sol, .noite .nuvem { opacity: 0; }
-.lua, .estrela { opacity: 0; transition: opacity .8s; pointer-events: none; }
-.noite .lua, .noite .estrela { opacity: 1; }
-.noite .estrela { animation: pisca 1.6s ease-in-out infinite; }
-@keyframes pisca { 50% { opacity: .5; } }
-.zzz text { opacity: 0; }
-.noite .zzz text { animation: zzz 2.4s ease-out infinite; }
-.noite .zzz text:nth-child(2) { animation-delay: .5s; }
-.noite .zzz text:nth-child(3) { animation-delay: 1s; }
-@keyframes zzz {
-  0% { opacity: 0; transform: translateY(10px); }
-  30% { opacity: 1; }
-  100% { opacity: 0; transform: translateY(-30px); }
+/* --- coisas da casa --- */
+.copa { transform-box: fill-box; transform-origin: 50% 100%; }
+.sacode .copa { animation: sacode .9s ease-in-out; }
+@keyframes sacode { 20% { transform: rotate(-2.5deg); } 45% { transform: rotate(2.5deg); } 70% { transform: rotate(-1.5deg); } }
+.galinha { transform-box: fill-box; transform-origin: 50% 100%; animation: bica 7s ease-in-out infinite; }
+.cacareja .galinha { animation: pulinho .6s ease-out; }
+@keyframes bica { 0%, 80%, 100% { transform: none; } 86% { transform: rotate(14deg); } 92% { transform: rotate(0); } }
+.gato { transform-box: fill-box; transform-origin: 50% 100%; animation: respira 3.4s ease-in-out infinite; }
+.gato .olho-aberto { opacity: 0; }
+.acordado .olho-aberto { opacity: 1; }
+.acordado .olho-fechado { opacity: 0; }
+.notas { opacity: 0; transition: opacity .6s; }
+.tocando .notas { opacity: 1; animation: notas 3.4s ease-in-out infinite; }
+@keyframes notas { 50% { transform: translateY(-10px); } }
+.fumaca { opacity: .5; animation: fumaca 9s ease-out infinite; }
+@keyframes fumaca { from { transform: translateY(0); opacity: .45; } to { transform: translateY(-80px) translateX(30px); opacity: 0; } }
+.vapor { opacity: 0; }
+.fervendo .vapor { animation: vapor 2.2s ease-out; }
+@keyframes vapor { 20% { opacity: .7; } to { opacity: 0; transform: translateY(-50px); } }
+.agua { opacity: 0; transition: opacity .3s; }
+.correndo .agua { opacity: 1; }
+.gota { opacity: 0; }
+.pingando .gota { animation: gota 1.2s ease-in 2; }
+@keyframes gota { 10% { opacity: 1; } to { opacity: 0; transform: translateY(70px); } }
+.luz-abajur { opacity: 0; transition: opacity .8s; }
+.acesa .luz-abajur { opacity: 1; }
+
+/* --- soneca: a tela escurece devagar --- */
+#soneca {
+  position: fixed; inset: 0; z-index: 3;
+  background: #1f2a55;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1.4s ease;
 }
+#soneca.visivel { opacity: .45; }
 
-/* balão de fala (para os adultos acompanharem) */
+/* --- balão de fala --- */
 .balao {
   position: fixed;
   left: 0; top: 0;
-  transform: translate(-50%, -100%) scale(.6);
+  transform: translate(-50%, -100%) scale(.85);
   opacity: 0;
   pointer-events: none;
-  background: linear-gradient(#fff, #f6f3ff);
+  background: #fffdf8;
   color: var(--tinta);
-  font: 800 clamp(18px, 4.2vmin, 30px)/1.1 var(--fonte);
-  padding: .35em .85em .25em;
-  border-radius: 999px;
-  border: 4px solid var(--coral);
-  box-shadow: 0 10px 24px rgba(46, 40, 80, .18);
-  white-space: nowrap;
-  transition: transform .25s cubic-bezier(.3, 1.6, .5, 1), opacity .2s;
+  font: 700 clamp(16px, 3.6vmin, 24px)/1.15 var(--fonte);
+  padding: .4em .9em .3em;
+  border-radius: 18px;
+  box-shadow: 0 6px 18px rgba(47, 42, 69, .16);
+  max-width: min(70vw, 340px);
+  text-align: center;
+  transition: transform .35s ease, opacity .35s ease;
   z-index: 5;
 }
-.balao.pai { border-color: var(--acento); }
+.balao::after {
+  content: "";
+  position: absolute;
+  left: 50%; bottom: -8px;
+  width: 16px; height: 16px;
+  margin-left: -8px;
+  background: inherit;
+  transform: rotate(45deg);
+  border-radius: 3px;
+}
 .balao.visivel { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+.balao[data-quem="vovo"] { box-shadow: 0 6px 18px rgba(47, 42, 69, .16), inset 0 -4px 0 #c9b8ef; }
+.balao[data-quem="vovoo"] { box-shadow: 0 6px 18px rgba(47, 42, 69, .16), inset 0 -4px 0 #a8cbe8; }
+.balao[data-quem="narrador"] { box-shadow: 0 6px 18px rgba(47, 42, 69, .16), inset 0 -4px 0 #f2c46a; }
 
-.confete {
+/* --- marca do toque: um círculo que some devagar --- */
+.toque {
   position: fixed;
-  width: 14px; height: 14px;
-  margin: -7px 0 0 -7px;
+  width: 44px; height: 44px;
+  margin: -22px 0 0 -22px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, .7), transparent 50%), var(--c);
+  border: 3px solid rgba(255, 255, 255, .85);
   pointer-events: none;
   z-index: 4;
-  animation: confete .7s ease-out forwards;
+  animation: toque .7s ease-out forwards;
 }
-@keyframes confete { to { transform: translate(var(--dx), var(--dy)) scale(.3); opacity: 0; } }
+@keyframes toque { from { transform: scale(.4); opacity: .9; } to { transform: scale(1.2); opacity: 0; } }
 
-/* botão de voltar: precisa segurar */
+/* --- botão de voltar: precisa segurar --- */
 #voltar {
   position: fixed;
   top: calc(env(safe-area-inset-top, 0px) + 10px);
@@ -168,7 +184,7 @@ button:focus-visible { outline: 3px solid var(--acento); outline-offset: 3px; }
   border: 0;
   border-radius: 50%;
   background: rgba(255, 255, 255, .55);
-  box-shadow: 0 4px 12px rgba(46, 40, 80, .12);
+  box-shadow: 0 4px 12px rgba(47, 42, 69, .12);
   display: grid;
   place-items: center;
   opacity: .7;
@@ -179,6 +195,55 @@ button:focus-visible { outline: 3px solid var(--acento); outline-offset: 3px; }
 #voltar.segurando { opacity: 1; }
 #voltar.segurando .anel circle { transition: stroke-dashoffset 1s linear; stroke-dashoffset: 0; }
 
+/* --- bolsinha --- */
+#bolsa {
+  position: fixed;
+  left: calc(env(safe-area-inset-left, 0px) + 14px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+  z-index: 6;
+  width: 64px; height: 64px;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 30%, #fff, #f3ece2);
+  box-shadow: 0 6px 16px rgba(47, 42, 69, .18);
+  display: grid; place-items: center;
+}
+#bolsa svg { width: 46px; height: 46px; }
+#bolsa[data-qtd]:not([data-qtd=""])::after {
+  content: attr(data-qtd);
+  position: absolute; top: -2px; right: -2px;
+  min-width: 22px; height: 22px;
+  border-radius: 11px;
+  background: var(--acento);
+  color: #fff;
+  font: 800 13px/22px var(--fonte);
+  text-align: center;
+}
+#bolsa.recebeu { animation: pulinho .5s ease-out; }
+.bandeja {
+  position: fixed;
+  left: calc(env(safe-area-inset-left, 0px) + 14px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 88px);
+  z-index: 6;
+  display: grid;
+  grid-template-columns: repeat(3, 58px);
+  gap: 8px;
+  padding: 10px;
+  border-radius: 22px;
+  background: rgba(255, 253, 248, .96);
+  box-shadow: 0 10px 28px rgba(47, 42, 69, .2);
+}
+.vaga {
+  width: 58px; height: 58px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--cartao-2);
+  display: grid; place-items: center;
+  padding: 4px;
+}
+.vaga svg { width: 100%; height: 100%; }
+.vaga.vazia { box-shadow: inset 0 0 0 2px #ebe7f1; background: transparent; }
+
 /* =========================================================
    TELA INICIAL
    ========================================================= */
@@ -187,63 +252,59 @@ button:focus-visible { outline: 3px solid var(--acento); outline-offset: 3px; }
   inset: 0;
   z-index: 10;
   background:
-    radial-gradient(120% 80% at 50% 110%, var(--ceu-3), transparent 60%),
-    linear-gradient(160deg, var(--ceu-1), var(--ceu-2));
+    radial-gradient(100% 60% at 50% 115%, #cfe2bb, transparent 70%),
+    linear-gradient(180deg, var(--ceu-1), var(--ceu-2));
   display: grid;
   place-items: center;
   overflow: auto;
   padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
 }
-.inicio-conteudo { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
-.pedestal { position: relative; display: grid; place-items: center; }
-.pedestal::before {
-  content: "";
-  position: absolute;
-  inset: 8% -4% 2%;
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, .7), rgba(255, 255, 255, 0) 70%);
-}
-#retrato { position: relative; height: min(38vh, 300px); width: auto; max-width: 100%; animation: respira 3s ease-in-out infinite; }
-.inicio-texto { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.inicio-conteudo { display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
 #inicio h1 {
   margin: 0;
-  font: 800 clamp(30px, 7vmin, 50px)/1 var(--fonte);
-  color: #fff;
-  text-shadow: 0 3px 0 rgba(46, 40, 80, .15), 0 8px 24px rgba(46, 40, 80, .2);
+  font: 800 clamp(30px, 7vmin, 48px)/1 var(--fonte);
+  color: var(--tinta);
   text-wrap: balance;
 }
-.botao-brincar {
+.familia { display: flex; align-items: flex-end; justify-content: center; gap: clamp(6px, 3vw, 24px); }
+.membro {
+  position: relative;
+  border: 0;
+  background: none;
+  padding: 0 4px 4px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.membro > svg { height: min(30vh, 230px); width: auto; max-width: 30vw; }
+.membro[data-quem="manu"] > svg { height: min(22vh, 170px); }
+.membro .nome { font: 700 17px/1 var(--fonte); color: var(--tinta); }
+.membro .lapis {
+  position: absolute; right: 2px; bottom: 26px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(47, 42, 69, .18);
+  display: grid; place-items: center;
+}
+.membro .lapis svg { width: 16px; height: 16px; fill: var(--coral); }
+.membro:active { transform: translateY(2px); }
+.botao-entrar {
   display: inline-flex; align-items: center; gap: 10px;
   border: 0;
   border-radius: 999px;
-  padding: 14px 34px 12px 26px;
-  font: 800 clamp(24px, 5vmin, 30px)/1 var(--fonte);
-  color: #4a2c00;
-  background: linear-gradient(#ffe07a, var(--amarelo) 55%, #f7b21f);
-  box-shadow: inset 0 3px 0 rgba(255, 255, 255, .6), 0 6px 0 var(--amarelo-escuro), 0 14px 24px rgba(120, 70, 0, .25);
-  animation: respira 2s ease-in-out infinite;
+  padding: 13px 34px 11px 26px;
+  font: 800 clamp(22px, 4.6vmin, 28px)/1 var(--fonte);
+  color: #4a3410;
+  background: linear-gradient(#f8d98c, var(--mel));
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, .55), 0 5px 0 var(--mel-escuro), 0 12px 22px rgba(120, 80, 10, .18);
 }
-.botao-brincar svg { width: 30px; height: 30px; fill: currentColor; }
-.botao-brincar:active { transform: translateY(5px); box-shadow: inset 0 3px 0 rgba(255, 255, 255, .6), 0 1px 0 var(--amarelo-escuro); }
-.botao-montar {
-  display: inline-flex; align-items: center; gap: 8px;
-  border: 0;
-  border-radius: 999px;
-  padding: 10px 22px 8px 16px;
-  font: 700 18px/1 var(--fonte);
-  color: var(--tinta);
-  background: linear-gradient(#fff, #efeafd);
-  box-shadow: inset 0 2px 0 #fff, 0 4px 0 #cfc5ef, 0 10px 20px rgba(46, 40, 80, .15);
-}
-.botao-montar svg { width: 22px; height: 22px; fill: var(--coral); }
-.botao-montar:active { transform: translateY(3px); box-shadow: 0 1px 0 #cfc5ef; }
-.nota { margin: 2px 0 0; max-width: 34ch; font: 600 13px/1.4 var(--fonte); color: rgba(46, 40, 80, .7); }
-@keyframes respira { 50% { transform: scale(1.04); } }
+.botao-entrar svg { width: 28px; height: 28px; fill: currentColor; }
+.botao-entrar:active { transform: translateY(4px); box-shadow: inset 0 3px 0 rgba(255, 255, 255, .55), 0 1px 0 var(--mel-escuro); }
+.nota { margin: 0; max-width: 40ch; font: 600 13px/1.4 var(--fonte); color: var(--tinta-suave); }
 
-@media (orientation: landscape) {
-  .inicio-conteudo { flex-direction: row; gap: 32px; text-align: left; }
-  #retrato { height: min(72vh, 320px); }
-  .inicio-texto { align-items: flex-start; }
+@media (orientation: landscape) and (max-height: 500px) {
+  .inicio-conteudo { gap: 8px; }
+  .membro > svg { height: min(42vh, 200px); }
+  .membro[data-quem="manu"] > svg { height: min(31vh, 150px); }
 }
 
 /* =========================================================
@@ -261,7 +322,7 @@ button:focus-visible { outline: 3px solid var(--acento); outline-offset: 3px; }
   grid-template-columns: 100%;
   background:
     radial-gradient(90% 60% at 50% 30%, #fff 0, rgba(255, 255, 255, 0) 60%),
-    linear-gradient(170deg, #b9ccff, #e6d9ff 60%, #ffe3ef);
+    linear-gradient(170deg, #c4d8ee, #e9e6f2 60%, #f4e8e4);
   padding-top: env(safe-area-inset-top, 0px);
 }
 .topo {
@@ -307,7 +368,7 @@ button:focus-visible { outline: 3px solid var(--acento); outline-offset: 3px; }
   box-shadow: 0 20px 40px rgba(110, 90, 190, .18);
 }
 #previa { position: relative; height: 100%; max-height: 420px; width: auto; max-width: 100%; }
-.vitrine.pulou #previa { animation: pula .5s ease-out; }
+.vitrine.pulou #previa { animation: pulinho .5s ease-out; }
 
 .painel {
   grid-area: painel;

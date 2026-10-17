@@ -18,13 +18,15 @@ const Editor = (() => {
     boca: '<path d="M6 10c2 5 10 5 12 0z"/>',
     oculos: '<circle cx="7" cy="13" r="4"/><circle cx="17" cy="13" r="4"/><path d="M11 13h2M3 13 2 9M21 13l1-4"/>',
     roupa: '<path d="M9 3 5 6l2 3 1-1v3l-4 9h16l-4-9V8l1 1 2-3-4-3c0 2-1.5 3-3 3S9 5 9 3z"/>',
+    barba: '<path d="M12 11c-3-3-7-2-9 1 3-1 6 0 9 1 3-1 6-2 9-1-2-3-6-4-9-1z"/><path d="M6 15c1 4 4 6 6 6s5-2 6-6"/>',
     sapatos: '<path d="M3 15c0-3 1-7 3-7l2 3c2 1 6 1 9 2s4 2 4 4H3z"/><path d="M3 18h18"/>',
   };
 
   let ficha, copia, abaAtual = "cabelo", aoTerminar = null;
   const $ = id => document.getElementById(id);
 
-  function abrir(fichaAtual, terminar) {
+  function abrir(fichaAtual, terminar, titulo = "Montar a Manu") {
+    document.getElementById("editor-titulo").textContent = titulo;
     copia = { ...fichaAtual };
     ficha = { ...fichaAtual };
     aoTerminar = terminar;
@@ -47,6 +49,7 @@ const Editor = (() => {
   }
 
   function desenharTudo() {
+    $("previa").setAttribute("viewBox", recorteDe("inteira", ficha));
     $("previa").innerHTML = desenharAvatar(ficha);
     const cat = CATEGORIAS.find(c => c.id === abaAtual);
 
@@ -67,7 +70,7 @@ const Editor = (() => {
       grade.innerHTML = Object.entries(cat.opcoes).map(([id, op]) => `
         <button type="button" class="opcao" data-opcao="${id}" aria-label="${op.nome}" title="${op.nome}"
           aria-pressed="${ficha[cat.id] === id}">
-          <svg viewBox="${RECORTES[cat.recorte]}" aria-hidden="true">${desenharAvatar({ ...ficha, [cat.id]: id }, { sombra: false })}</svg>
+          <svg viewBox="${recorteDe(cat.recorte, ficha)}" aria-hidden="true">${desenharAvatar({ ...ficha, [cat.id]: id }, { sombra: false })}</svg>
           <span class="marca" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m6 12 4 4 8-8"/></svg></span>
         </button>`).join("");
     }
@@ -113,14 +116,14 @@ const Editor = (() => {
     });
 
     $("sortear").addEventListener("click", () => {
-      ficha = fichaSorteada();
+      ficha = fichaSorteada(ficha.adulto);
       desenharTudo();
       comemorar();
       sininho();
     });
 
     $("pronto").addEventListener("click", () => {
-      falarTexto("Ficou linda!", "mae");
+      falarTexto("Que bonito!", "mae");
       fechar(true);
     });
     $("desistir").addEventListener("click", () => fechar(false));
