@@ -25,7 +25,7 @@ A casa aparece "em corte", como uma casinha de bonecas aberta. A criança toca n
 
 | Cômodo | O que tem | O que dá para fazer |
 |---|---|---|
-| Quintal | Mangueira, horta, galinha, cerca, varal | Sacudir a árvore e a fruta cai; puxar cenoura da horta; a galinha bota ovo |
+| Quintal | Mangueira, horta, galinha, laguinho com pato, passarinhos, o cachorro Caramelo | Sacudir a árvore e a fruta cai; puxar cenoura; a galinha bota ovo; jogar a bola para o Caramelo buscar |
 | Sala | Sofá, rádio, baú de brinquedos, gato, retratos da família | Guardar brinquedos no baú; ligar o rádio; acordar o gato |
 | Cozinha | Geladeira, fogão com panela, pia, filtro de barro, mesa com fruteira | Guardar comida na geladeira; pôr fruta na fruteira; lavar a fruta na pia |
 | Quarto | Cama com colcha de crochê, abajur, ursinho | Hora da soneca; acender e apagar o abajur |
@@ -84,3 +84,8 @@ Serviços com plano gratuito que fazem isso bem: Firebase (Google) ou Supabase. 
 - Vovó e vovô com reações, abraço, e a vovó guardando o que recebe.
 - Ateliê para montar cada pessoa da família.
 - O mundo fica salvo no celular.
+- Sons feitos pelo próprio navegador: bichos (gato, cachorro, galinha, galo, pato, passarinhos, coruja, grilos)
+  e coisas (pegar, cair, guardar, porta da geladeira, tampa do baú, zíper da bolsinha, passos, água, panela).
+- Quintal maior, com o Caramelo, que busca a bola, o pato no laguinho e passarinhos na cerca.
+- Dia e noite: de noite, lua, estrelas, coruja e grilos; a família dá boa-noite e a vovó conta historinhas; a galinha faz amanhecer.
+- Tela cheia que volta sozinha e botão "voltar" do celular travado, para a criança não sair sem querer.

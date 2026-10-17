@@ -39,6 +39,7 @@ function carregarMundo() {
   m.itens = m.itens.filter(i => ITENS[i.tipo]);
   // se a vovó estava levando algo quando o jogo fechou, a coisa fica no chão perto dela
   for (const i of m.itens) if (i.onde.startsWith("mao:") && i.onde !== "mao:manu") { const quem = i.onde.slice(4); i.onde = "chao"; i.x = PESSOAS[quem]?.casa || 1300; }
+  for (const i of m.itens) if (i.onde === "cao") { i.onde = "chao"; i.x = -150; }
   return m;
 }
 
@@ -96,7 +97,9 @@ const cam = { x: 900, y: 0, vw: 1000, vh: 620, s: 1, rect: null };
 const gente = {};
 
 function montarMundo() {
-  svg.innerHTML = `<g id="g-casa">${desenharCasa(familia)}</g><g id="g-itens-chao"></g><g id="g-pessoas"></g>`;
+  svg.innerHTML = `<g id="g-casa">${desenharCasa(familia)}</g><g id="g-itens-chao"></g><g id="g-animais"></g><g id="g-pessoas"></g><g id="g-noite">${desenharNoite()}</g>`;
+  svg.classList.toggle("e-noite", noite);
+  criarCachorro();
   for (const id of ["vovoo", "vovo", "manu"]) criarPessoa(id);
   desenharTudo();
   medirTela();
@@ -120,8 +123,24 @@ function criarPessoa(id) {
 }
 
 function posicionar(p) {
+  const k = p.escala || ESCALA_PESSOA;
   p.el.setAttribute("transform", `translate(${n1(p.x)} ${MUNDO.piso})`);
-  p.elVira.setAttribute("transform", `scale(${p.dir * ESCALA_PESSOA} ${ESCALA_PESSOA})`);
+  p.elVira.setAttribute("transform", `scale(${p.dir * k} ${k})`);
+}
+
+/* O cachorro Caramelo: anda pelo quintal como as pessoas, mas no tamanho dele */
+const cao = { id: "cao", x: -140, dir: 1, alvo: null, aoChegar: null, velocidade: 300, escala: 1, ocupado: false };
+function criarCachorro() {
+  document.getElementById("g-animais").innerHTML =
+    `<g id="cao" class="cao" data-coisa="cachorro"><g class="vira-cao">${desenharCachorro()}</g></g>`;
+  cao.el = document.getElementById("cao");
+  cao.elVira = cao.el.querySelector(".vira-cao");
+  posicionar(cao);
+  desenharBocaCao();
+}
+function desenharBocaCao() {
+  const bola = mundo.itens.find(i => i.onde === "cao");
+  cao.el.querySelector(".boca-cao").innerHTML = bola ? `<g transform="translate(4 18) scale(.62)">${ITENS.bola.d()}</g>` : "";
 }
 
 function desenharTudo() {
@@ -165,8 +184,9 @@ function medirTela() {
   aplicarCamera();
 }
 function alvoDaCamera() {
-  if (cam.vw >= MUNDO.largura) return (MUNDO.largura - cam.vw) / 2;
-  return limitar(gente.manu.x - cam.vw / 2, -60, MUNDO.largura + 60 - cam.vw);
+  const total = MUNDO.largura - MUNDO.inicio;
+  if (cam.vw >= total) return MUNDO.inicio + (total - cam.vw) / 2;
+  return limitar(gente.manu.x - cam.vw / 2, MUNDO.inicio - 60, MUNDO.largura + 60 - cam.vw);
 }
 function aplicarCamera() {
   svg.setAttribute("viewBox", `${n1(cam.x)} ${n1(cam.y)} ${n1(cam.vw)} ${n1(cam.vh)}`);
@@ -176,7 +196,7 @@ const telaXY = (x, y) => [cam.rect.left + (x - cam.x) * cam.s, cam.rect.top + (y
 
 /* ---------- 5. Andar ---------- */
 function irAte(p, x, aoChegar) {
-  x = limitar(x, 60, MUNDO.largura - 60);
+  x = limitar(x, MUNDO.inicio + 60, MUNDO.largura - 60);
   if (Math.abs(x - p.x) < 6) { p.alvo = null; p.aoChegar = null; aoChegar && aoChegar(); return; }
   p.alvo = x;
   p.aoChegar = aoChegar || null;
@@ -189,7 +209,7 @@ function virarPara(p, x) {
 const ladoDe = (x, distancia) => x - sinal(x - gente.manu.x || 1) * distancia;
 
 function mover(dt) {
-  for (const p of Object.values(gente)) {
+  for (const p of [...Object.values(gente), cao]) {
     if (p.alvo === null) { p.el.classList.remove("andando"); continue; }
     const dx = p.alvo - p.x, passo = p.velocidade * dt;
     p.dir = sinal(dx) || p.dir;
@@ -205,6 +225,7 @@ function mover(dt) {
     } else {
       p.x += sinal(dx) * passo;
       posicionar(p);
+      if (p.id === "manu") { p.andou = (p.andou || 0) + passo; if (p.andou > 34) { p.andou = 0; SONS.passo(); } }
     }
   }
 }
@@ -230,22 +251,36 @@ async function dizer(quem, momento, ...extra) {
   if (!f) return;
   return dizerFala(quem, f);
 }
-async function dizerFala(quem, f) {
-  pararSons();
-  falandoQuem = quem === "narrador" ? "manu" : quem;
+let falaVez = 0;
+function mostrarBalao(texto, quem, onde) {
+  falandoQuem = onde || (quem === "narrador" ? "manu" : quem);
   falouEm = performance.now();
-  balao.textContent = f.texto;
+  balao.textContent = texto;
   balao.dataset.quem = quem;
   balao.classList.add("visivel");
   posicionarBalao();
   clearTimeout(timerBalao);
-  timerBalao = setTimeout(() => balao.classList.remove("visivel"), Math.max(1800, f.texto.length * 90));
+  timerBalao = setTimeout(() => balao.classList.remove("visivel"), Math.max(1800, texto.length * 90));
+}
+// devolve true se a fala chegou ao fim sem ser interrompida por outra
+async function dizerFala(quem, f, onde) {
+  pararSons();
+  const minha = ++falaVez;
+  mostrarBalao(f.texto, quem, onde);
   await falar({ ...f, voz: vozDe(quem) });
+  return minha === falaVez;
+}
+// bicho não usa a voz do celular: toca o som dele e mostra o balão
+function somDeBicho(som, texto, x, y) {
+  SONS[som]();
+  mostrarBalao(texto, "bicho", { x, y });
 }
 function posicionarBalao() {
-  if (!balao.classList.contains("visivel") || !gente[falandoQuem]) return;
-  const p = gente[falandoQuem];
-  const [x, y] = telaXY(p.x, MUNDO.piso - p.altura - 8);
+  if (!balao.classList.contains("visivel")) return;
+  const alvo = typeof falandoQuem === "object" ? falandoQuem
+    : gente[falandoQuem] && { x: gente[falandoQuem].x, y: MUNDO.piso - gente[falandoQuem].altura - 8 };
+  if (!alvo) return;
+  const [x, y] = telaXY(alvo.x, alvo.y);
   balao.style.left = limitar(x, 90, innerWidth - 90) + "px";
   balao.style.top = Math.max(60, y) + "px";
 }
@@ -274,6 +309,7 @@ function pegar(i, quem = "manu") {
     else { anterior.onde = "chao"; anterior.x = gente[quem].x; }
   }
   const veioDe = i.onde;
+  SONS.pegar();
   i.onde = "mao:" + quem;
   delete i.x; delete i.vaga;
   desenharChao();
@@ -289,8 +325,9 @@ function soltar(quem = "manu") {
   if (!i) return;
   const p = gente[quem];
   i.onde = "chao";
-  i.x = limitar(p.x + p.dir * 38, 40, MUNDO.largura - 40);
+  i.x = limitar(p.x + p.dir * 38, MUNDO.inicio + 40, MUNDO.largura - 40);
   desenharChao(i.id);
+  setTimeout(SONS.soltar, 420);
   desenharMao(quem);
   mostrarDica();
   salvar();
@@ -303,7 +340,7 @@ function guardar(i, lugar, quem = "manu") {
   i.vaga = v;
   desenharMao(quem);
   if (lugar === "bolsa") desenharBolsa(); else desenharLugar(lugar);
-  guardado();
+  SONS.guardar();
   mostrarDica();
   salvar();
   return true;
@@ -312,9 +349,14 @@ function guardar(i, lugar, quem = "manu") {
 function abrir(lugar) {
   const el = document.getElementById(lugar);
   if (!el) return;
-  el.classList.add(lugar === "bau" ? "aberto" : "aberta");
+  const classe = lugar === "bau" ? "aberto" : "aberta";
+  if (!el.classList.contains(classe)) { if (lugar === "bau") SONS.tampa(); else if (lugar === "geladeira") SONS.porta(); }
+  el.classList.add(classe);
   clearTimeout(el._timer);
-  el._timer = setTimeout(() => el.classList.remove("aberto", "aberta"), 6000);
+  el._timer = setTimeout(() => {
+    el.classList.remove(classe);
+    if (lugar === "geladeira") SONS.porta(); else if (lugar === "bau") SONS.tampa();
+  }, 6000);
 }
 
 async function reagirAoGuardar(i, lugar) {
@@ -410,8 +452,23 @@ function tocarPessoa(id, valeAinda) {
     if (i) return entregar(i, id);
     animar(manu, "abraco", 1300);
     animar(p, "abraco", 1300);
-    dizer(id, "abraco");
+    if (!noite) return dizer(id, "abraco");
+    if (id === "vovo" && performance.now() - historiaEm > 90000) return contarHistoria();
+    dizer(id, "boaNoite");
   });
+}
+
+/* De noite, a vovó conta uma historinha curta (uma frase de cada vez) */
+let historiaEm = -1e9;
+async function contarHistoria() {
+  historiaEm = performance.now();
+  const historias = FALAS.vovo.historias;
+  const h = historias[Math.floor(Math.random() * historias.length)];
+  for (const frase of h) {
+    const f = typeof frase === "string" ? { texto: frase } : frase;
+    if (!(await dizerFala("vovo", f))) return; // parou se alguém tocou em outra coisa
+    await esperar(450);
+  }
 }
 
 /* A vovó (ou o vovô) recebe, comenta e leva até o lugar certo, mostrando como se faz */
@@ -453,12 +510,14 @@ function tocarCoisa(nome, alvo, valeAinda) {
       return chegar(COISAS.arvore, () => {
         virarPara(manu, 262);
         animarEl(el, "sacode", 1000);
+        SONS.vento();
         if (mundo.arvore <= 0) return dizer(quemEstaPerto() || "narrador", quemEstaPerto() ? "fruta" : "planta");
         mundo.arvore--;
         const caiu = novoItem("manga", "chao", { x: 190 + Math.random() * 130 });
         setTimeout(() => {
           document.getElementById("frutas-arvore").innerHTML = desenharFrutasArvore(mundo.arvore);
           desenharChao(caiu.id);
+          SONS.cair();
           dizerNome("manga");
           salvar();
         }, 450);
@@ -484,11 +543,12 @@ function tocarCoisa(nome, alvo, valeAinda) {
       return chegar(COISAS.galinha, () => {
         virarPara(manu, 880);
         animarEl(el, "cacareja", 700);
-        dizer("narrador", "galinha");
+        if (noite) return mudarCeu(false); // de noite, a galinha canta e amanhece
+        somDeBicho("cocoro", "Có, có, có!", 880, 410);
         const ovosNoQuintal = itensEm("chao").filter(i => i.tipo === "ovo" && i.x < 1000).length;
         if (ovosNoQuintal < 2) {
           const ovo = novoItem("ovo", "chao", { x: 836 - ovosNoQuintal * 30 });
-          setTimeout(() => { desenharChao(ovo.id); salvar(); }, 500);
+          setTimeout(() => { desenharChao(ovo.id); setTimeout(SONS.soltar, 450); salvar(); }, 500);
         }
       });
 
@@ -503,7 +563,8 @@ function tocarCoisa(nome, alvo, valeAinda) {
     case "radio":
       return chegar(COISAS.radio, () => {
         const ligar = !radioLigado;
-        tocarRadio(ligar);
+        SONS.clique();
+        tocarRadio(ligar, noite);
         el.classList.toggle("tocando", ligar);
         if (ligar) dizer("vovoo", "radio");
       });
@@ -512,19 +573,22 @@ function tocarCoisa(nome, alvo, valeAinda) {
       return chegar(ladoDe(1700, 80), () => {
         virarPara(manu, 1700);
         animarEl(el, "acordado", 2600);
-        dizer("narrador", "gato");
+        somDeBicho("miau", "Miau!", 1680, 450);
+        setTimeout(SONS.ronrom, 900);
       });
 
     case "filtro":
       return chegar(COISAS.filtro + 40, () => {
         virarPara(manu, COISAS.filtro);
         animarEl(el, "pingando", 2600);
+        SONS.gota(); setTimeout(SONS.gota, 1200);
         dizer("vovo", "agua");
       });
 
     case "pia":
       return chegar(COISAS.pia, () => {
         animarEl(el, "correndo", 1800);
+        SONS.agua(1.6);
         const i = naMao("manu");
         if (i && ehComida(i.tipo)) setTimeout(() => dizer("narrador", "lavou"), 900);
         else if (quemEstaPerto()) dizer("vovo", "lavar");
@@ -534,30 +598,156 @@ function tocarCoisa(nome, alvo, valeAinda) {
       return chegar(COISAS.fogao - 70, () => {
         virarPara(manu, COISAS.fogao);
         animarEl(el, "fervendo", 2200);
+        SONS.panela();
         dizer("vovo", "quente");
       });
 
     case "cama":
-      return chegar(COISAS.cama, async () => {
-        const noite = document.getElementById("soneca");
-        noite.classList.add("visivel");
-        await dizer("narrador", "soneca");
-        await esperar(1800);
-        noite.classList.remove("visivel");
-        await esperar(700);
-        dizer("narrador", "acorda");
-      });
+      return chegar(COISAS.cama, () => mudarCeu(!noite)); // a cama faz a noite chegar (e acordar)
 
     case "abajur":
       return chegar(COISAS.abajur - 60, () => {
         const acesa = el.classList.toggle("acesa");
+        SONS.clique();
         dizerFala("narrador", { texto: FALAS.narrador.abajur[acesa ? 0 : 1] });
+      });
+
+    case "cachorro":
+      return chegar(ladoDe(cao.x, 95), () => {
+        virarPara(manu, cao.x);
+        if (cao.alvo === null) virarPara(cao, manu.x);
+        const i = naMao("manu");
+        if (i && i.tipo === "bola" && !cao.ocupado) return brincarDeBuscar(i);
+        animarEl(cao.el, "feliz", 1200);
+        somDeBicho("auau", "Au, au!", cao.x, 420);
+      });
+
+    case "pato":
+      return chegar(COISAS.pato + 150, () => {
+        virarPara(manu, COISAS.pato);
+        animarEl(el, "nadando", 4000);
+        somDeBicho("quem", "Quém, quém!", -440, 440);
+      });
+
+    case "passaros":
+      return chegar(COISAS.passaros + 90, () => {
+        virarPara(manu, COISAS.passaros);
+        animarEl(el, "voando", 4200);
+        somDeBicho("piu", "Piu, piu!", -40, 360);
+        setTimeout(SONS.piu, 2400);
+      });
+
+    case "coruja":
+      return chegar(COISAS.coruja + 90, () => {
+        virarPara(manu, COISAS.coruja);
+        animarEl(el, "pisca", 900);
+        somDeBicho("uhuh", "Uh, uh!", 300, 222);
       });
 
     default:
       return chegar(COISAS[nome] || manu.x, () => dizer("narrador", nome));
   }
 }
+
+/* O Caramelo busca a bola: a Manu joga, ele corre, pega e traz de volta */
+async function brincarDeBuscar(bola) {
+  const manu = gente.manu;
+  cao.ocupado = true;
+  const lado = manu.x - 330 > MUNDO.inicio + 80 ? -1 : 1;
+  const longe = limitar(manu.x + lado * 330, MUNDO.inicio + 80, 940);
+  animar(manu, "pulinho", 650);
+  bola.onde = "chao";
+  bola.x = longe;
+  desenharMao("manu");
+  desenharChao(bola.id);
+  mostrarDica();
+  SONS.cair();
+  dizer("narrador", "caoBusca");
+  await esperar(350);
+  SONS.auau();
+  await new Promise(r => irAte(cao, longe, r));
+  bola.onde = "cao";
+  delete bola.x;
+  desenharChao();
+  desenharBocaCao();
+  SONS.pegar();
+  await esperar(250);
+  await new Promise(r => irAte(cao, limitar(manu.x - lado * -70, MUNDO.inicio + 60, 960), r));
+  virarPara(cao, manu.x);
+  bola.onde = "chao";
+  bola.x = limitar(cao.x + cao.dir * 34, MUNDO.inicio + 40, 980);
+  desenharBocaCao();
+  desenharChao();
+  SONS.soltar();
+  animarEl(cao.el, "feliz", 1200);
+  somDeBicho("auau", "Au, au!", cao.x, 420);
+  await esperar(900);
+  dizer("narrador", "caoVolta");
+  cao.ocupado = false;
+  salvar();
+}
+
+/* ---------- Dia e noite ----------
+   De noite: o céu escurece devagar, aparecem a lua, as estrelas e a coruja,
+   os grilos cantam baixinho e a família dá boa-noite. */
+let noite = false, vezDoCeu = 0;
+async function mudarCeu(paraNoite) {
+  if (paraNoite === noite) return;
+  noite = paraNoite;
+  const vez = ++vezDoCeu, ainda = () => vez === vezDoCeu;
+  svg.classList.toggle("e-noite", noite);
+  document.getElementById("ceu").dataset.noite = noite ? "sim" : "";
+  svg.querySelector('[data-coisa="abajur"]')?.classList.toggle("acesa", noite);
+  grilos(noite);
+  if (radioLigado) tocarRadio(true, noite);
+  if (noite) {
+    if ((await dizer("narrador", "noite")) === false || !ainda()) return;
+    await esperar(400);
+    if ((await dizer("vovo", "noite")) === false || !ainda()) return;
+    await esperar(400);
+    await dizer("vovoo", "noite");
+    await esperar(1200);
+    if (ainda() && noite) somDeBicho("uhuh", "Uh, uh!", 300, 222);
+  } else {
+    somDeBicho("cocorico", "Cocoricó!", 880, 410);
+    await esperar(1500);
+    if (!ainda()) return;
+    if ((await dizer("vovo", "bomDia")) === false || !ainda()) return;
+    await esperar(400);
+    await dizer("vovoo", "bomDia");
+  }
+}
+// de noite, a coruja canta sozinha de vez em quando
+setInterval(() => { if (noite && inicio.hidden && performance.now() - falouEm > 6000) SONS.uhuh(); }, 26000);
+
+/* ---------- Tela cheia e trava ----------
+   1. O botão põe o jogo em tela cheia (some a barra do navegador).
+   2. Se a criança sair da tela cheia sem querer, o próximo toque na casa volta para ela.
+   3. O botão "voltar" do celular não tira ninguém da casa.
+   No iPhone a tela cheia não existe para páginas: lá, use "Acesso Guiado". */
+const botaoTela = document.getElementById("telacheia");
+const raiz = document.documentElement;
+const podeTelaCheia = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+const emTelaCheia = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+let querTelaCheia = false;
+async function entrarTelaCheia() {
+  querTelaCheia = true;
+  try { await (raiz.requestFullscreen ? raiz.requestFullscreen({ navigationUI: "hide" }) : raiz.webkitRequestFullscreen?.()); } catch (e) {}
+  try { await screen.orientation?.lock?.("landscape"); } catch (e) {}
+  atualizarBotaoTela();
+}
+function atualizarBotaoTela() {
+  botaoTela.hidden = !podeTelaCheia || emTelaCheia() || !inicio.hidden;
+}
+botaoTela.addEventListener("click", entrarTelaCheia);
+document.addEventListener("fullscreenchange", atualizarBotaoTela);
+document.addEventListener("webkitfullscreenchange", atualizarBotaoTela);
+svg.addEventListener("pointerup", () => { if (querTelaCheia && podeTelaCheia && !emTelaCheia()) entrarTelaCheia(); });
+
+function prenderVoltarDoCelular() { try { history.pushState({ casa: true }, ""); } catch (e) {} }
+addEventListener("popstate", () => { if (inicio.hidden) prenderVoltarDoCelular(); });
+
+document.getElementById("ceu").addEventListener("click", () => { SONS.clique(); mudarCeu(!noite); });
 
 /* ---------- 9. A bolsinha (guarda coisas para levar pela casa) ---------- */
 const botaoBolsa = document.getElementById("bolsa");
@@ -578,10 +768,11 @@ botaoBolsa.addEventListener("click", () => {
   pop();
   const i = naMao("manu");
   if (i) {
-    if (guardar(i, "bolsa")) { dizer("narrador", "bolsa"); animarEl(botaoBolsa, "recebeu", 600); }
+    if (guardar(i, "bolsa")) { SONS.ziper(); dizer("narrador", "bolsa"); animarEl(botaoBolsa, "recebeu", 600); }
     else dizer("narrador", "cheio");
     return;
   }
+  SONS.ziper();
   bandeja.hidden = !bandeja.hidden;
 });
 bandeja.addEventListener("click", e => {
@@ -617,7 +808,7 @@ function relogio(agora) {
     if (d < 300 && agora - p.ultimoOi > 60000 && agora - falouEm > 3000 && manu.alvo === null) {
       p.ultimoOi = agora;
       animar(p, "acenando", 1700);
-      dizer(id, "oi");
+      dizer(id, noite ? "noite" : "oi");
     }
   }
   requestAnimationFrame(relogio);
@@ -678,24 +869,32 @@ document.getElementById("familia").addEventListener("click", async e => {
 });
 
 document.getElementById("entrar").addEventListener("click", async () => {
+  falarTexto("Vamos para a casa da vovó!", "mae"); // falar logo no toque destrava a voz no iPhone
   await destravarSom();
-  try { await document.documentElement.requestFullscreen?.(); } catch (e) {}
-  try { await screen.orientation?.lock?.("landscape"); } catch (e) {}
+  if (podeTelaCheia) await entrarTelaCheia();
   try { await navigator.wakeLock?.request("screen"); } catch (e) {}
+  prenderVoltarDoCelular();
   inicio.hidden = true;
   voltar.hidden = false;
   botaoBolsa.hidden = false;
+  document.getElementById("ceu").hidden = false;
+  atualizarBotaoTela();
   requestAnimationFrame(() => { medirTela(); sininho(); });
+  if (noite) grilos(true);
 });
 
 function irParaInicio() {
   pararSons();
   tocarRadio(false);
   document.querySelector("[data-coisa='radio']")?.classList.remove("tocando");
+  grilos(false);
+  querTelaCheia = false;
   voltar.hidden = true;
   botaoBolsa.hidden = true;
   bandeja.hidden = true;
+  document.getElementById("ceu").hidden = true;
   inicio.hidden = false;
+  atualizarBotaoTela();
   desenharFamilia();
 }
 
@@ -715,7 +914,10 @@ voltar.addEventListener("contextmenu", e => e.preventDefault());
 svg.addEventListener("pointerdown", aoTocar);
 svg.addEventListener("contextmenu", e => e.preventDefault());
 addEventListener("resize", () => medirTela());
-document.addEventListener("visibilitychange", () => { if (document.hidden) { pararSons(); tocarRadio(false); } });
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) { pararSons(); tocarRadio(false); grilos(false); svg.querySelector("[data-coisa='radio']")?.classList.remove("tocando"); }
+  else if (noite && inicio.hidden) grilos(true);
+});
 
 Editor.iniciar();
 montarMundo();

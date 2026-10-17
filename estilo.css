@@ -23,7 +23,7 @@
 }
 *, *::before, *::after { box-sizing: inherit; }
 [hidden] { display: none !important; }
-html, body { height: 100%; }
+html, body { height: 100%; overscroll-behavior: none; }
 body {
   margin: 0;
   overflow: hidden;
@@ -173,6 +173,61 @@ button:focus-visible { outline: 3px solid var(--acento); outline-offset: 3px; }
   animation: toque .7s ease-out forwards;
 }
 @keyframes toque { from { transform: scale(.4); opacity: .9; } to { transform: scale(1.2); opacity: 0; } }
+
+/* --- a noite chega devagar --- */
+#g-noite { opacity: 0; transition: opacity 2.6s ease; pointer-events: none; }
+.e-noite #g-noite { opacity: 1; }
+.e-noite #g-noite .coruja-toque { pointer-events: auto; }
+.estrela-noite { animation: brilho 4s ease-in-out infinite; }
+.estrela-noite.e1 { animation-delay: -1.3s; }
+.estrela-noite.e2 { animation-delay: -2.6s; }
+@keyframes brilho { 50% { opacity: .45; } }
+.coruja { transform-box: fill-box; transform-origin: 50% 100%; animation: respira 5s ease-in-out infinite; }
+.pisca .coruja { animation: pulinho .6s ease-out; }
+
+/* --- bichos --- */
+.cao .pata { transform-box: fill-box; transform-origin: 50% 0; }
+.cao.andando .pata-0 { animation: passo .36s ease-in-out infinite; }
+.cao.andando .pata-1 { animation: passo .36s ease-in-out -.18s infinite; }
+.cao .corpo-cao { transform-box: fill-box; transform-origin: 50% 100%; }
+.cao.andando .corpo-cao { animation: sobeDesce .18s ease-in-out infinite alternate; }
+.cao.feliz .corpo-cao { animation: pulinho .6s ease-out 2; }
+.rabo-cao { transform-box: fill-box; transform-origin: 100% 100%; animation: abana 1.6s ease-in-out infinite; }
+.cao.feliz .rabo-cao, .cao.andando .rabo-cao { animation-duration: .3s; }
+@keyframes abana { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(14deg); } }
+.pato { transform-box: fill-box; transform-origin: 50% 100%; animation: boia 3.4s ease-in-out infinite; }
+@keyframes boia { 50% { transform: translateY(2px) rotate(-2deg); } }
+.nadando .pato { animation: nada 4s ease-in-out; }
+@keyframes nada { 25% { transform: translateX(46px); } 50% { transform: translateX(60px) scaleX(-1); } 75% { transform: translateX(14px) scaleX(-1); } }
+.ave { transform-box: fill-box; transform-origin: 50% 100%; animation: bica 6s ease-in-out infinite; }
+.ave-1 { animation-delay: -2.5s; }
+.voando .ave-0 { animation: voa 4.2s ease-in-out; }
+.voando .ave-1 { animation: voa 4.2s ease-in-out .2s; }
+@keyframes voa { 30% { transform: translate(-60px, -150px); } 60% { transform: translate(20px, -190px); } 100% { transform: none; } }
+
+/* --- botões do canto: dia/noite e tela cheia --- */
+.botoes-canto {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  right: calc(env(safe-area-inset-right, 0px) + 10px);
+  z-index: 6;
+  display: flex;
+  gap: 8px;
+}
+.botoes-canto button {
+  width: 48px; height: 48px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .7);
+  box-shadow: 0 4px 12px rgba(47, 42, 69, .14);
+  display: grid; place-items: center;
+}
+.botoes-canto svg { width: 30px; height: 30px; }
+#telacheia svg { width: 24px; height: 24px; fill: none; stroke: var(--tinta-suave); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+#ceu .lua { display: none; }
+#ceu[data-noite="sim"] { background: rgba(32, 42, 90, .75); }
+#ceu[data-noite="sim"] .sol { display: none; }
+#ceu[data-noite="sim"] .lua { display: block; }
 
 /* --- botão de voltar: precisa segurar --- */
 #voltar {

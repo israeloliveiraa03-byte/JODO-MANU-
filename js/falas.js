@@ -38,6 +38,15 @@ const FALAS = {
     agua:      ["Água fresquinha do filtro!"],
     lavar:     ["Isso, lava bem a fruta!"],
     retrato:   ["Olha a vovó aqui!"],
+    // de noite
+    noite:     ["Já está de noite! Hora de pôr o pijama.", "Olha a lua lá fora, meu amor!"],
+    boaNoite:  ["Boa noite, minha netinha. Dorme com os anjinhos.", "Sonha com coisa boa, viu?"],
+    bomDia:    ["Bom dia, meu amor! Dormiu bem?", "Bom dia! Vamos tomar café?"],
+    historias: [
+      ["Era uma vez um gatinho bem preguiçoso.", "Ele dormia o dia inteiro no tapete da vovó.", "E de noite, sabe o que ele fazia?", "Dormia mais um pouquinho! Fim."],
+      ["Era uma vez uma galinha que adorava cantar.", "Ela cantava para o sol acordar.", "E quando a lua chegava, ela dizia: boa noite, sol!", "E ia dormir no poleiro. Fim."],
+      ["Era uma vez uma mangueira bem grandona.", "Todo dia ela dava uma manga para a menina.", "A menina dizia: obrigada, árvore!", "E a árvore balançava as folhas, feliz. Fim."],
+    ],
     conta:     n => `${["", "Uma", "Duas", "Três", "Quatro"][n]} ${n === 1 ? "fruta" : "frutas"} na fruteira!`,
   },
   vovoo: {
@@ -52,6 +61,9 @@ const FALAS = {
     radio:     ["Essa música é do meu tempo!", "Vamos dançar?"],
     horta:     ["Puxa a cenoura com força!", "A horta do vovô!"],
     retrato:   ["Olha o vovô aqui!"],
+    noite:     ["Boa noite, princesa!", "Ih, já escureceu. Hora de dormir!"],
+    boaNoite:  ["Dorme bem, minha princesa.", "Amanhã a gente brinca mais, tá?"],
+    bomDia:    ["Bom dia, flor do dia!", "Bom dia! O galo já cantou!"],
   },
   // a voz que diz o nome das coisas (pode ser a mãe ou o pai)
   narrador: {
@@ -70,6 +82,9 @@ const FALAS = {
     planta:    ["Que planta bonita!"],
     armario:   ["Quanta roupa!"],
     abajur:    ["Acendeu!", "Apagou!"],
+    noite:     ["Olha as estrelas!", "A lua apareceu!"],
+    caoBusca:  ["Busca, Caramelo!"],
+    caoVolta:  ["Muito bem, Caramelo!", "Ele trouxe a bola!"],
   },
 };
 

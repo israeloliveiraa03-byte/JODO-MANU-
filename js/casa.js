@@ -3,14 +3,14 @@
 
    A casa é vista "em corte", como uma casinha de bonecas aberta.
    O mundo tem 4000 de largura:
-     quintal (0–1000) · sala (1000–2000) · cozinha (2000–3000) · quarto (3000–4000)
+     quintal (-760–1000) · sala (1000–2000) · cozinha (2000–3000) · quarto (3000–4000)
    Os pés das pessoas pisam na linha 520.
    ========================================================= */
-const MUNDO = { largura: 4000, piso: 520, teto: 112 };
+const MUNDO = { inicio: -760, largura: 4000, piso: 520, teto: 112 };
 const ESCALA_PESSOA = .55;
 
 const COMODOS = [
-  { id: "quintal", nome: "quintal", x0: 0, x1: 1000 },
+  { id: "quintal", nome: "quintal", x0: -760, x1: 1000 },
   { id: "sala", nome: "sala", x0: 1000, x1: 2000 },
   { id: "cozinha", nome: "cozinha", x0: 2000, x1: 3000 },
   { id: "quarto", nome: "quarto", x0: 3000, x1: 4000 },
@@ -30,6 +30,7 @@ const COISAS = {
   arvore: 360, horta: 670, galinha: 800, planta: 1080, sofa: 1290, quadro: 1290,
   radio: 1580, gato: 1700, filtro: 2070, pia: 2400, fogao: 2590,
   cama: 3470, abajur: 3730, armario: 3125,
+  pato: -400, passaros: -40, casinha: -250, coruja: 300,
 };
 
 /* Posições dentro dos lugares (x, y do pé do item, escala) */
@@ -106,8 +107,47 @@ function desenharTelhado() {
 function desenharQuintal() {
   let s = "";
   // cerca
-  for (let x = 30; x < 990; x += 56) s += vol(`path d="M${x - 9} 492 L${x - 9} 412 L${x} 400 L${x + 9} 412 L${x + 9} 492 Z"`, "#f3eee4", "volSuave");
-  s += vol(`rect x="16" y="424" width="970" height="10" rx="4"`, "#ece5d8", "cil") + vol(`rect x="16" y="462" width="970" height="10" rx="4"`, "#ece5d8", "cil");
+  for (let x = -742; x < 990; x += 56) s += vol(`path d="M${x - 9} 492 L${x - 9} 412 L${x} 400 L${x + 9} 412 L${x + 9} 492 Z"`, "#f3eee4", "volSuave");
+  s += vol(`rect x="-756" y="424" width="1742" height="10" rx="4"`, "#ece5d8", "cil") + vol(`rect x="-756" y="462" width="1742" height="10" rx="4"`, "#ece5d8", "cil");
+
+  // laguinho com o pato
+  s += `<g data-coisa="pato">
+    <rect x="-560" y="430" width="250" height="100" fill="#fff" fill-opacity="0"/>
+    ${vol(`ellipse cx="-430" cy="514" rx="128" ry="24"`, "#9ccbdc", "volSuave")}
+    <ellipse cx="-430" cy="512" rx="104" ry="15" fill="#b7dbe7"/>
+    <path d="M-470 512 q14 -4 28 0 M-400 518 q14 -4 28 0" stroke="#fff" stroke-opacity=".7" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    ${[-548, -538, -318].map((x, i) => `<path d="M${x} 512 Q${x - 4} ${470 - i * 8} ${x + 2} ${452 - i * 6}" stroke="#7fae6a" stroke-width="4" fill="none" stroke-linecap="round"/>`).join("")}
+    <g transform="translate(-440 512)"><g class="pato">
+      ${vol(`ellipse cx="0" cy="-16" rx="30" ry="17"`, "#fbf6e8")}
+      ${vol(`path d="M-30 -20 L-42 -30 L-28 -12 Z"`, "#f3ecd9")}
+      ${vol(`circle cx="20" cy="-40" r="13"`, "#fbf6e8")}
+      ${vol(`path d="M31 -40 Q44 -38 44 -34 Q36 -32 30 -34 Z"`, "#f2a23a")}
+      <circle cx="23" cy="-43" r="2.4" fill="#2a1a12"/>
+      <path d="M-14 -20 Q0 -10 14 -18" stroke="#ebe2cb" stroke-width="3" fill="none" stroke-linecap="round"/>
+    </g></g>
+  </g>`;
+
+  // casinha do cachorro
+  s += `<g>${sombraNoChao(-250, 70)}
+    ${vol(`rect x="-310" y="430" width="120" height="70" rx="6"`, "#d9b38c", "volSuave")}
+    ${vol(`path d="M-322 436 L-250 380 L-178 436 Z"`, "#c98a6e", "volSuave")}
+    <path d="M-272 500 L-272 468 Q-250 446 -228 468 L-228 500 Z" fill="#6b4a36"/>
+    <rect x="-276" y="418" width="52" height="12" rx="4" fill="#fbf6ee"/>
+    <text x="-250" y="428" text-anchor="middle" font-family="Baloo 2, Trebuchet MS, sans-serif" font-weight="800" font-size="10" fill="#8a6a55">CARAMELO</text>
+  </g>`;
+
+  // passarinhos na cerca
+  s += `<g data-coisa="passaros">
+    <rect x="-110" y="350" width="150" height="70" fill="#fff" fill-opacity="0"/>
+    ${[[-70, 400, "#e88f7a"], [0, 402, "#7fb0d8"]].map(([x, y, c], i) => `<g transform="translate(${x} ${y})"><g class="ave ave-${i}">
+      ${vol(`ellipse cx="0" cy="-12" rx="14" ry="11"`, c)}
+      ${vol(`circle cx="10" cy="-24" r="8"`, c)}
+      <path d="M17 -25 L24 -23 L17 -21 Z" fill="#f2b630"/>
+      <circle cx="12" cy="-26" r="1.6" fill="#2a1a12"/>
+      ${vol(`path d="M-4 -16 Q-12 -26 -18 -12 Q-10 -10 -4 -16 Z"`, clarear(c, .25))}
+      <path d="M-12 -8 L-22 -4" stroke="${c}" stroke-width="4" stroke-linecap="round"/>
+    </g></g>`).join("")}
+  </g>`;
 
   // mangueira
   s += `<g data-coisa="arvore" class="arvore">
@@ -382,4 +422,62 @@ function desenharDentro(lugar, itens) {
     const [x, y, k] = VAGAS[lugar][it.vaga];
     return `<g transform="translate(${x} ${y}) scale(${k})">${desenharItem(it.tipo, `data-item="${it.id}"`)}</g>`;
   }).join("");
+}
+
+/* ---------- o cachorro (anda pelo quintal, por isso é desenhado à parte) ---------- */
+function desenharCachorro() {
+  const C = "#d9a066", E = "#b57a42", B = "#f3d7b0";
+  return `<rect x="-60" y="-90" width="120" height="92" fill="#fff" fill-opacity="0"/>
+    <ellipse cx="0" cy="0" rx="46" ry="7" fill="url(#sombraChao)"/>
+    <g class="corpo-cao">
+      <g class="rabo-cao">${vol('path d="M-36 -46 Q-58 -66 -52 -78 Q-44 -66 -30 -54 Z"', C)}</g>
+      ${["-26", "-12", "14", "28"].map((x, i) => `<g class="pata pata-${i % 2}">${vol(`rect x="${+x - 6}" y="-34" width="12" height="34" rx="6"`, i % 2 ? C : E, "cil")}</g>`).join("")}
+      ${vol('ellipse cx="0" cy="-42" rx="40" ry="20"', C)}
+      ${vol('ellipse cx="4" cy="-34" rx="22" ry="10"', B)}
+      ${vol('circle cx="34" cy="-62" r="20"', C)}
+      ${vol('ellipse cx="50" cy="-56" rx="12" ry="9"', B)}
+      <ellipse cx="60" cy="-60" rx="5" ry="4" fill="#3a2418"/>
+      <circle cx="38" cy="-68" r="3.2" fill="#2a1a12"/><circle cx="39" cy="-69" r="1.1" fill="#fff"/>
+      <g class="orelha-cao">${vol('path d="M22 -78 Q12 -76 14 -54 Q24 -58 30 -72 Z"', E)}</g>
+      <path d="M50 -50 Q55 -46 60 -50" stroke="#7a3b22" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <g class="boca-cao" transform="translate(60 -48)"></g>
+    </g>`;
+}
+
+/* ---------- a noite (uma camada por cima de tudo, que aparece devagar) ---------- */
+function desenharNoite() {
+  const ini = MUNDO.inicio;
+  let s = `<rect x="-6000" y="-4000" width="${1000 + 6000}" height="8000" fill="#16204a" fill-opacity=".55"/>`;
+  s += `<rect x="4000" y="-4000" width="8000" height="8000" fill="#16204a" fill-opacity=".55"/>`;
+  s += `<rect x="1000" y="-4000" width="3000" height="${4000 + 90}" fill="#16204a" fill-opacity=".5"/>`;
+  s += `<rect x="1000" y="566" width="3000" height="4000" fill="#16204a" fill-opacity=".5"/>`;
+  s += `<rect x="1000" y="90" width="3000" height="476" fill="#1d2550" fill-opacity=".16"/>`;
+  // janelas: lá fora está escuro, com estrelinhas
+  for (const [x, y, w, h] of [[1504, 178, 130, 136], [2340, 188, 120, 116], [3414, 186, 120, 108]]) {
+    s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="#1b2656" fill-opacity=".7"/>`;
+    s += `<polygon points="${pontosEstrela(x + w * .3, y + h * .3, 5)}" fill="#fff4c4"/><polygon points="${pontosEstrela(x + w * .7, y + h * .55, 4)}" fill="#fff4c4"/>`;
+  }
+  // luzinhas quentes dentro de casa
+  for (const [x, y, r] of [[1290, 200, 260], [2190, 210, 240], [2850, 260, 220], [3730, 380, 200]]) {
+    s += `<circle cx="${x}" cy="${y}" r="${r}" fill="url(#luzJanela)" opacity=".5"/>`;
+  }
+  // lua e estrelas (no céu do quintal e acima do telhado)
+  s += `<circle cx="680" cy="120" r="70" fill="url(#luzJanela)"/><circle cx="680" cy="120" r="34" fill="#fbf3cf"/>
+        <circle cx="694" cy="110" r="30" fill="#2a3466" fill-opacity=".9"/>`;
+  const estrelas = [[520, 60], [600, 210], [820, 70], [900, 230], [760, 300], [-120, 120], [-300, 60], [-520, 160], [-660, 80], [40, 50],
+                    [1400, -120], [1900, -200], [2300, -90], [2900, -240], [3400, -110], [3800, -200], [-200, -150], [600, -220]];
+  s += estrelas.map(([x, y], i) => `<polygon class="estrela-noite e${i % 3}" points="${pontosEstrela(x, y, 4 + (i % 3) * 2)}" fill="#fff4c4"/>`).join("");
+  // coruja no galho da mangueira
+  s += `<g class="coruja-toque" data-coisa="coruja" transform="translate(300 300)">
+    <rect x="-34" y="-64" width="68" height="70" fill="#fff" fill-opacity="0"/>
+    <g class="coruja">
+      ${vol('ellipse cx="0" cy="-26" rx="22" ry="26"', "#9a7a5c")}
+      ${vol('ellipse cx="0" cy="-18" rx="14" ry="16"', "#c9ad8c")}
+      <path d="M-18 -46 L-14 -60 L-6 -48 Z M18 -46 L14 -60 L6 -48 Z" fill="#8a6a4e"/>
+      <circle cx="-9" cy="-38" r="8" fill="#fff8e0"/><circle cx="9" cy="-38" r="8" fill="#fff8e0"/>
+      <circle cx="-9" cy="-38" r="4" fill="#2a1a12"/><circle cx="9" cy="-38" r="4" fill="#2a1a12"/>
+      <path d="M-3 -30 L3 -30 L0 -24 Z" fill="#f2b630"/>
+      <path d="M-30 2 L30 2" stroke="#9a6a46" stroke-width="7" stroke-linecap="round"/>
+    </g></g>`;
+  return s;
 }
