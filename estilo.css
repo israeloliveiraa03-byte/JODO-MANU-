@@ -87,6 +87,37 @@ button:focus-visible { outline: 3px solid var(--acento); outline-offset: 3px; }
 #dentro-bau { opacity: 0; transition: opacity .4s; }
 .bau.aberto #dentro-bau { opacity: 1; }
 
+/* --- mais coisas que abrem e fecham --- */
+.porta-freezer { transform-box: fill-box; transform-origin: 100% 50%; transition: transform .6s ease; }
+.freezer-aberto .porta-freezer { transform: scaleX(-.3); }
+.porta-pia-e, .porta-armario-e, .vidro-e { transform-box: fill-box; transform-origin: 0% 50%; transition: transform .6s ease; }
+.porta-pia-d, .porta-armario-d, .vidro-d { transform-box: fill-box; transform-origin: 100% 50%; transition: transform .6s ease; }
+.pia-aberta .porta-pia-e, .armario.aberto .porta-armario-e { transform: scaleX(-.28); }
+.pia-aberta .porta-pia-d, .armario.aberto .porta-armario-d { transform: scaleX(-.28); }
+.janela.aberta .vidro-e, .janela.aberta .vidro-d { transform: scaleX(.12); }
+.cortina-e, .cortina-d { transform-box: fill-box; transform-origin: 50% 0; }
+.janela.aberta .cortina-e { animation: brisa 2.6s ease-in-out infinite; }
+.janela.aberta .cortina-d { animation: brisa 2.6s ease-in-out -1.3s infinite; }
+@keyframes brisa { 50% { transform: skewX(4deg); } }
+.porta-forno { transform-box: fill-box; transform-origin: 50% 100%; transition: transform .6s ease; }
+.forno-aberto .porta-forno { transform: scaleY(-.22); }
+.brasa { opacity: 0; transition: opacity .8s; }
+.forno-aberto .brasa { opacity: .55; }
+.porta-frente { transform-box: fill-box; transform-origin: 0% 50%; transition: transform .7s ease; }
+.porta-frente.aberta { transform: scaleX(.14); }
+[data-roupa] { cursor: pointer; }
+.armario:not(.aberto) [data-roupa] { pointer-events: none; }
+
+/* --- emoções: piscar, dançar --- */
+.palpebra { transform-box: fill-box; transform-origin: 50% 0; transform: scaleY(0); animation: piscar 5.2s ease-in-out infinite; animation-delay: var(--atraso, 0s); }
+@keyframes piscar { 0%, 93%, 100% { transform: scaleY(0); } 95.5% { transform: scaleY(1); } }
+.opcao .palpebra, .membro .palpebra, #previa .palpebra, [data-quem] .palpebra { animation: none; }
+.pessoa.dancando .bob { animation: danca 1.1s ease-in-out infinite; }
+@keyframes danca { 0%, 100% { transform: rotate(-4deg) translateY(0); } 25% { transform: translateY(-6px); } 50% { transform: rotate(4deg) translateY(0); } 75% { transform: translateY(-6px); } }
+.pupila { transition: transform .35s ease; }
+.brilhinho { animation: brilhinho .9s ease-out forwards; }
+@keyframes brilhinho { from { opacity: 1; transform: scale(.3); } to { opacity: 0; transform: scale(1.4); } }
+
 /* a dica: o lugar certo do que a Manu segura ganha uma luz bem suave */
 .dica { animation: dica 2.6s ease-in-out infinite; }
 @keyframes dica { 50% { filter: drop-shadow(0 0 10px rgba(255, 236, 170, .95)); } }

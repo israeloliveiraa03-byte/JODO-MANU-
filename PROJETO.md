@@ -89,3 +89,9 @@ Serviços com plano gratuito que fazem isso bem: Firebase (Google) ou Supabase. 
 - Quintal maior, com o Caramelo, que busca a bola, o pato no laguinho e passarinhos na cerca.
 - Dia e noite: de noite, lua, estrelas, coruja e grilos; a família dá boa-noite e a vovó conta historinhas; a galinha faz amanhecer.
 - Tela cheia que volta sozinha e botão "voltar" do celular travado, para a criança não sair sem querer.
+- Visual mais suave e com profundidade: luz fosca, móveis com tampo e lateral, raios de sol, céu e morros que
+  andam mais devagar e plantas na frente que andam mais rápido (paralaxe).
+- Coisas que abrem e fecham com som: congelador com picolé, forno com bolo, armário da pia, guarda-roupa com
+  roupas para vestir, janelas com cortina ao vento e porta da frente automática.
+- Emoções: as pessoas piscam, olham para o que acontece e mudam o rosto (alegre, rindo, surpresa, carinho,
+  sono, curiosa, atenta) conforme a brincadeira; dançam com o rádio e bocejam de noite.

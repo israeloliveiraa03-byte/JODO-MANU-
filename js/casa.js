@@ -27,10 +27,11 @@ const LUGARES = {
 
 /* Coisas da casa que reagem ao toque (x = onde a pessoa para) */
 const COISAS = {
-  arvore: 360, horta: 670, galinha: 800, planta: 1080, sofa: 1290, quadro: 1290,
+  arvore: 360, horta: 670, galinha: 800, planta: 3234, sofa: 1290, quadro: 1290,
   radio: 1580, gato: 1700, filtro: 2070, pia: 2400, fogao: 2590,
   cama: 3470, abajur: 3730, armario: 3125,
   pato: -400, passaros: -40, casinha: -250, coruja: 300,
+  freezer: 2300, armarioPia: 2400, forno: 2590, porta: 1000,
 };
 
 /* Posições dentro dos lugares (x, y do pé do item, escala) */
@@ -44,34 +45,68 @@ const CENOURAS_HORTA = [610, 676, 742];
 
 /* ---------- pedacinhos reaproveitados ---------- */
 function janelaCasa(x, y, w, h, corCortina) {
-  return `<g>
+  const meio = (w - 20) / 2;
+  return `<g data-coisa="janela" class="janela">
+    <path d="M${x + 14} ${y + h} L${x + w - 14} ${y + h} L${x + w + 70} 492 L${x - 30} 492 Z" fill="url(#raioSol)"/>
     <rect x="${x + 5}" y="${y + 8}" width="${w}" height="${h}" rx="10" fill="#1a0f14" fill-opacity=".07"/>
+    ${profundidade(x, y, w, h, "#fbf8f2", 8)}
     ${vol(`rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10"`, "#fbf8f2", "volSuave")}
     <rect x="${x + 10}" y="${y + 10}" width="${w - 20}" height="${h - 20}" rx="5" fill="#cfe5f1"/>
     <ellipse cx="${x + w * .3}" cy="${y + h - 26}" rx="${w * .35}" ry="18" fill="#bcd8a4"/>
-    <rect x="${x + 10}" y="${y + 10}" width="${w - 20}" height="${h - 20}" rx="5" fill="url(#vidro)"/>
-    <rect x="${x + w / 2 - 3}" y="${y + 10}" width="6" height="${h - 20}" fill="#fbf8f2"/>
-    ${vol(`path d="M${x - 8} ${y - 6} Q${x + 18} ${y + h * .5} ${x + 4} ${y + h + 6} L${x - 14} ${y + h + 6} L${x - 14} ${y - 6} Z"`, corCortina, "volSuave")}
-    ${vol(`path d="M${x + w + 8} ${y - 6} Q${x + w - 18} ${y + h * .5} ${x + w - 4} ${y + h + 6} L${x + w + 14} ${y + h + 6} L${x + w + 14} ${y - 6} Z"`, corCortina, "volSuave")}
+    <g class="vidro-e"><rect x="${x + 10}" y="${y + 10}" width="${meio}" height="${h - 20}" rx="5" fill="url(#vidro)"/>
+      <rect x="${x + 10}" y="${y + 10}" width="${meio}" height="${h - 20}" rx="5" fill="none" stroke="#fbf8f2" stroke-width="5"/></g>
+    <g class="vidro-d"><rect x="${x + 10 + meio}" y="${y + 10}" width="${meio}" height="${h - 20}" rx="5" fill="url(#vidro)"/>
+      <rect x="${x + 10 + meio}" y="${y + 10}" width="${meio}" height="${h - 20}" rx="5" fill="none" stroke="#fbf8f2" stroke-width="5"/></g>
+    <g class="cortina-e">${vol(`path d="M${x - 8} ${y - 6} Q${x + 18} ${y + h * .5} ${x + 4} ${y + h + 6} L${x - 14} ${y + h + 6} L${x - 14} ${y - 6} Z"`, corCortina, "volSuave")}</g>
+    <g class="cortina-d">${vol(`path d="M${x + w + 8} ${y - 6} Q${x + w - 18} ${y + h * .5} ${x + w - 4} ${y + h + 6} L${x + w + 14} ${y + h + 6} L${x + w + 14} ${y - 6} Z"`, corCortina, "volSuave")}</g>
     ${vol(`rect x="${x - 22}" y="${y - 12}" width="${w + 44}" height="8" rx="4"`, "#b58a62", "cil")}
   </g>`;
+}
+
+/* Profundidade: o tampo (em cima) e a lateral (à direita) de um móvel,
+   como se a gente visse a casa um pouquinho de cima e de lado. */
+function profundidade(x, y, w, h, cor, d = 12) {
+  return `<path d="M${x + 4} ${y} L${x + d + 4} ${y - d} L${x + w + d} ${y - d} L${x + w} ${y} Z" fill="${clarear(cor, .22)}"/>` +
+         `<path d="M${x + w} ${y + 2} L${x + w + d} ${y - d + 2} L${x + w + d} ${y + h - d} L${x + w} ${y + h - 2} Z" fill="${escurecer(cor, .16)}"/>`;
 }
 
 function sombraNoChao(x, rx, y = 502) {
   return `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${n1(rx * .12 + 4)}" fill="url(#sombraChao)"/>`;
 }
 
-/* ---------- o céu, o chão e o telhado ---------- */
-function desenharCeuEChao() {
-  let s = `<rect x="-4000" y="-3000" width="12000" height="3500" fill="url(#ceuDia)"/>`;
-  s += `<circle cx="140" cy="-70" r="120" fill="url(#luzJanela)"/><circle cx="140" cy="-70" r="46" fill="#fff1c4"/>`;
-  for (const [x, y, k] of [[520, -120, 1], [-300, 20, .8], [4400, -60, 1.1], [3300, -260, .9], [1800, -300, .8], [820, 40, .7]]) {
-    s += `<g class="nuvem-ceu" transform="translate(${x} ${y}) scale(${k})" fill="#fff" fill-opacity=".85">
+/* ---------- o céu, o chão e o telhado ----------
+   O céu e os morros ficam numa camada "longe", que anda mais devagar que a casa
+   quando a câmera se mexe (paralaxe): é isso que dá a sensação de profundidade. */
+function desenharLonge() {
+  let s = `<rect x="-6000" y="-3000" width="16000" height="3500" fill="url(#ceuDia)"/>`;
+  s += `<circle cx="-200" cy="-60" r="160" fill="url(#luzJanela)"/><circle cx="-200" cy="-60" r="50" fill="#fff1c4"/>`;
+  for (const [x, y, k] of [[200, -120, 1], [-900, 20, .8], [1500, -40, 1.1], [2300, -240, .9], [-1600, -200, .8], [600, 40, .7], [3100, 30, .9], [-400, -280, 1]]) {
+    s += `<g transform="translate(${x} ${y}) scale(${k})" fill="#fff" fill-opacity=".85">
       <ellipse cx="0" cy="0" rx="70" ry="26"/><ellipse cx="34" cy="-16" rx="40" ry="26"/><ellipse cx="-30" cy="-10" rx="32" ry="20"/></g>`;
   }
-  // morros ao longe
-  s += `<ellipse cx="-600" cy="490" rx="900" ry="140" fill="#cfe0bd"/><ellipse cx="700" cy="500" rx="700" ry="110" fill="#c5dab0"/>`;
-  s += `<ellipse cx="4700" cy="495" rx="900" ry="150" fill="#cfe0bd"/>`;
+  // duas fileiras de morros: os mais longe, mais clarinhos
+  for (let x = -3000, i = 0; x < 6000; x += 1100, i++) s += `<ellipse cx="${x}" cy="470" rx="${700 + (i % 3) * 120}" ry="${150 + (i % 2) * 40}" fill="#d7e6c8"/>`;
+  for (let x = -2600, i = 0; x < 6000; x += 900, i++) s += `<ellipse cx="${x}" cy="500" rx="${560 + (i % 2) * 140}" ry="${110 + (i % 3) * 20}" fill="#c9dcb5"/>`;
+  for (let x = -2400, i = 0; x < 6000; x += 520, i++) {
+    s += vol(`ellipse cx="${x}" cy="${430 - (i % 2) * 14}" rx="34" ry="44"`, "#b9d2a2", "volSuave") + `<rect x="${x - 4}" y="${460 - (i % 2) * 14}" width="8" height="26" fill="#b49a7c"/>`;
+  }
+  return s;
+}
+
+/* Plantas bem na frente da tela: andam mais rápido que a casa (paralaxe também) */
+function desenharFrente() {
+  let s = "";
+  for (let x = -1600, i = 0; x < 6000; x += 380, i++) {
+    const y = 640 + (i % 2) * 18, r = 54 + (i % 3) * 14, c = ["#94b97a", "#9cc183", "#a3c78a"][i % 3];
+    s += vol(`ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r * .62}"`, c, "volSuave");
+    s += vol(`ellipse cx="${x + r * .6}" cy="${y + 8}" rx="${r * .7}" ry="${r * .45}"`, c, "volSuave");
+    if (i % 2 === 0) s += `<circle cx="${x - 14}" cy="${y - r * .4}" r="7" fill="#f6dfe3"/><circle cx="${x + 18}" cy="${y - r * .5}" r="6" fill="#fff6dc"/><circle cx="${x + 2}" cy="${y - r * .55}" r="2.5" fill="#f2c46a"/>`;
+  }
+  return s;
+}
+
+function desenharCeuEChao() {
+  let s = "";
   // grama e terra
   s += `<rect x="-4000" y="488" width="12000" height="76" fill="#bcd69f"/>`;
   s += `<rect x="-4000" y="488" width="12000" height="10" fill="#a9c78c" fill-opacity=".6"/>`;
@@ -221,6 +256,12 @@ function desenharEstrutura() {
   let s = vol(`rect x="986" y="90" width="3028" height="24" rx="4"`, "#d2a679", "cil");
   s += vol(`rect x="986" y="90" width="30" height="160" rx="4"`, "#e8d9c2", "cil");     // parede do quintal (porta embaixo)
   s += vol(`rect x="986" y="488" width="30" height="78" rx="4"`, "#e8d9c2", "cil");
+  // porta da frente: abre sozinha quando alguém chega perto
+  s += `<g class="porta-frente" id="porta-frente">
+    ${vol(`rect x="1016" y="252" width="86" height="236" rx="6"`, "#b98458", "volSuave")}
+    ${vol(`rect x="1028" y="266" width="62" height="88" rx="5"`, "#c99668", "volSuave")}${vol(`rect x="1028" y="370" width="62" height="104" rx="5"`, "#c99668", "volSuave")}
+    ${vol(`circle cx="1090" cy="380" r="6"`, "#f2c46a")}
+  </g>`;
   s += vol(`rect x="3984" y="90" width="30" height="476" rx="4"`, "#e8d9c2", "cil");    // parede do fundo
   for (const x of [2000, 3000]) s += vol(`rect x="${x - 13}" y="112" width="26" height="128" rx="4"`, "#e8d9c2", "cil");
   return s;
@@ -242,12 +283,6 @@ function retratos(fichas) {
 function desenharSala(fichas) {
   let s = janelaCasa(1494, 168, 150, 156, "#c8d6b8");
   s += retratos(fichas);
-  // planta
-  s += `<g data-coisa="planta">${sombraNoChao(1074, 40)}
-    ${vol(`path d="M1046 440 L1102 440 L1094 500 L1054 500 Z"`, "#c98a6e", "volSuave")}
-    ${vol(`path d="M1074 440 C1040 400 1030 360 1052 340 C1062 380 1070 400 1074 440 Z"`, "#7fae6a")}
-    ${vol(`path d="M1074 440 C1100 390 1120 360 1112 330 C1090 360 1080 400 1074 440 Z"`, "#8fb97a")}
-    ${vol(`path d="M1074 440 C1066 390 1076 350 1080 320 C1090 360 1086 400 1074 440 Z"`, "#86b072")}</g>`;
   // sofá
   s += `<g data-coisa="sofa">${sombraNoChao(1290, 150)}
     ${vol(`rect x="1168" y="372" width="244" height="90" rx="30"`, "#a9bccb", "volSuave")}
@@ -262,6 +297,7 @@ function desenharSala(fichas) {
     <rect x="1520" y="340" width="120" height="160" fill="#fff" fill-opacity="0"/>
     ${vol(`rect x="1536" y="436" width="88" height="12" rx="5"`, "#b58a62", "cil")}
     ${vol(`rect x="1546" y="446" width="10" height="54" rx="4"`, "#a87d56", "cil")}${vol(`rect x="1604" y="446" width="10" height="54" rx="4"`, "#a87d56", "cil")}
+    ${profundidade(1546, 390, 68, 46, "#c98a6e", 9)}
     ${vol(`rect x="1546" y="390" width="68" height="46" rx="12"`, "#c98a6e", "volSuave")}
     <circle cx="1566" cy="413" r="13" fill="#e9d6b9"/>
     <path d="M1557 407 h18 M1555 413 h22 M1557 419 h18" stroke="#c9b08e" stroke-width="2" stroke-linecap="round"/>
@@ -286,6 +322,7 @@ function desenharSala(fichas) {
   s += `<g data-lugar="bau" id="bau" class="bau">
     ${sombraNoChao(1880, 80)}
     <rect x="1796" y="380" width="168" height="124" fill="#fff" fill-opacity="0"/>
+    ${profundidade(1808, 444, 144, 58, "#b98458", 12)}
     <rect x="1812" y="430" width="136" height="70" rx="8" fill="#7a5236"/>
     <g id="dentro-bau"></g>
     ${vol(`rect x="1808" y="444" width="144" height="58" rx="10"`, "#b98458", "volSuave")}
@@ -314,13 +351,18 @@ function desenharCozinha() {
   s += `<g data-lugar="geladeira" id="geladeira" class="geladeira">
     ${sombraNoChao(2190, 84)}
     <rect x="2116" y="220" width="148" height="284" fill="#fff" fill-opacity="0"/>
+    ${profundidade(2124, 226, 132, 274, "#c9e2d7", 14)}
     ${vol(`rect x="2120" y="226" width="140" height="274" rx="24"`, "#c9e2d7", "volSuave")}
     <rect x="2130" y="300" width="120" height="194" rx="8" fill="#f6fbf9"/>
     <rect x="2130" y="300" width="120" height="30" fill="#e3f0ea"/>
     ${[358, 426].map(y => `<rect x="2134" y="${y}" width="112" height="5" rx="2" fill="#d5e7df"/>`).join("")}
     <g id="dentro-geladeira"></g>
-    ${vol(`path d="M2120 296 L2120 250 Q2120 226 2144 226 L2236 226 Q2260 226 2260 250 L2260 296 Z"`, "#cfe6dc", "volSuave")}
-    ${vol(`rect x="2134" y="248" width="8" height="34" rx="4"`, "#eef6f2", "cil")}
+    <rect x="2130" y="234" width="120" height="58" rx="8" fill="#e8f4fb"/>
+    <g id="dentro-freezer"></g>
+    <g class="porta-freezer" data-coisa="freezer">
+      ${vol(`path d="M2120 296 L2120 250 Q2120 226 2144 226 L2236 226 Q2260 226 2260 250 L2260 296 Z"`, "#cfe6dc", "volSuave")}
+      ${vol(`rect x="2134" y="248" width="8" height="34" rx="4"`, "#eef6f2", "cil")}
+    </g>
     <g class="porta-geladeira">
       ${vol(`path d="M2120 300 L2260 300 L2260 478 Q2260 500 2238 500 L2142 500 Q2120 500 2120 478 Z"`, "#cfe6dc", "volSuave")}
       ${vol(`rect x="2132" y="320" width="9" height="74" rx="4.5"`, "#eef6f2", "cil")}
@@ -331,9 +373,17 @@ function desenharCozinha() {
   // pia e armário
   s += `<g data-coisa="pia">${sombraNoChao(2400, 110)}
     <rect x="2296" y="360" width="208" height="142" fill="#fff" fill-opacity="0"/>
+    ${profundidade(2300, 418, 200, 82, "#efe4d1", 12)}
     ${vol(`rect x="2300" y="418" width="200" height="82" rx="6"`, "#efe4d1", "volSuave")}
-    <rect x="2306" y="426" width="92" height="68" rx="5" fill="#e6d8c1"/><rect x="2402" y="426" width="92" height="68" rx="5" fill="#e6d8c1"/>
-    <circle cx="2388" cy="460" r="4" fill="#c4a882"/><circle cx="2412" cy="460" r="4" fill="#c4a882"/>
+    <rect x="2306" y="426" width="188" height="68" rx="5" fill="#8c7458"/>
+    <rect x="2306" y="458" width="188" height="4" fill="#6f5a44"/>
+    ${vol(`rect x="2322" y="434" width="44" height="24" rx="8"`, "#a9bccb", "volSuave")}${vol(`ellipse cx="2440" cy="452" rx="30" ry="8"`, "#e9b7a8")}
+    ${vol(`rect x="2408" y="466" width="60" height="24" rx="6"`, "#f2c46a", "volSuave")}
+    <g data-coisa="armarioPia">
+      <g class="porta-pia-e">${vol(`rect x="2306" y="426" width="92" height="68" rx="5"`, "#e6d8c1", "volSuave")}<circle cx="2388" cy="460" r="4" fill="#c4a882"/></g>
+      <g class="porta-pia-d">${vol(`rect x="2402" y="426" width="92" height="68" rx="5"`, "#e6d8c1", "volSuave")}<circle cx="2412" cy="460" r="4" fill="#c4a882"/></g>
+    </g>
+    ${profundidade(2294, 406, 212, 14, "#f7f4ef", 12)}
     ${vol(`rect x="2294" y="406" width="212" height="14" rx="5"`, "#f7f4ef", "cil")}
     <path d="M2360 408 Q2400 422 2440 408" stroke="#d8dfe2" stroke-width="5" fill="none"/>
     <path d="M2392 408 L2392 376 Q2392 366 2404 366 L2416 366" stroke="#b9c4ca" stroke-width="7" fill="none" stroke-linecap="round"/>
@@ -341,9 +391,18 @@ function desenharCozinha() {
   // fogão com panela
   s += `<g data-coisa="fogao">${sombraNoChao(2590, 70)}
     <rect x="2526" y="330" width="128" height="172" fill="#fff" fill-opacity="0"/>
+    ${profundidade(2530, 398, 120, 102, "#f4f0ea", 12)}
     ${vol(`rect x="2530" y="398" width="120" height="102" rx="10"`, "#f4f0ea", "volSuave")}
-    <rect x="2546" y="430" width="88" height="54" rx="8" fill="#3e3a44" fill-opacity=".75"/>
-    <rect x="2552" y="436" width="40" height="10" rx="4" fill="#fff" fill-opacity=".18"/>
+    <rect x="2546" y="430" width="88" height="56" rx="8" fill="#5a3f34"/>
+    <rect class="brasa" x="2546" y="430" width="88" height="56" rx="8" fill="#f3a35a"/>
+    <rect x="2552" y="472" width="76" height="4" rx="2" fill="#2e2620" fill-opacity=".6"/>
+    <g id="dentro-forno"></g>
+    <g class="porta-forno" data-coisa="forno">
+      ${vol(`rect x="2542" y="426" width="96" height="62" rx="9"`, "#ece6dd", "volSuave")}
+      <rect x="2554" y="436" width="72" height="34" rx="6" fill="#3e3a44" fill-opacity=".75"/>
+      <rect x="2560" y="440" width="34" height="8" rx="4" fill="#fff" fill-opacity=".18"/>
+      ${vol(`rect x="2560" y="476" width="60" height="7" rx="3.5"`, "#c9c2b8", "cil")}
+    </g>
     ${[2552, 2576, 2604, 2628].map(x => vol(`circle cx="${x}" cy="414" r="5"`, "#d9d2c8")).join("")}
     ${vol(`rect x="2560" y="364" width="62" height="32" rx="10"`, "#a9bccb", "volSuave")}
     ${vol(`rect x="2556" y="358" width="70" height="10" rx="5"`, "#9fb3c3", "cil")}
@@ -355,6 +414,7 @@ function desenharCozinha() {
   s += `<g data-lugar="fruteira" id="fruteira">${sombraNoChao(2850, 100)}
     <rect x="2756" y="350" width="190" height="152" fill="#fff" fill-opacity="0"/>
     ${vol(`rect x="2776" y="440" width="12" height="60" rx="4"`, "#a87d56", "cil")}${vol(`rect x="2912" y="440" width="12" height="60" rx="4"`, "#a87d56", "cil")}
+    <path d="M2766 418 L2778 406 L2952 406 L2940 418 Z" fill="#fffaf2"/>
     <path d="M2760 418 L2940 418 L2940 456 Q2850 468 2760 456 Z" fill="#fbf6ee"/>${xadrez}
     <path d="M2760 418 L2940 418 L2940 456 Q2850 468 2760 456 Z" fill="url(#volSuave)"/>
     <g id="dentro-fruteira"></g>
@@ -366,11 +426,21 @@ function desenharCozinha() {
 function desenharQuarto() {
   let s = janelaCasa(3404, 176, 140, 128, "#e3c4c0");
   // guarda-roupa
-  s += `<g data-coisa="armario">${sombraNoChao(3125, 84)}
+  s += `<g data-coisa="armario" id="armario" class="armario">${sombraNoChao(3125, 84)}
+    ${profundidade(3050, 236, 150, 264, "#dcb894", 14)}
     ${vol(`rect x="3050" y="236" width="150" height="264" rx="12"`, "#dcb894", "volSuave")}
-    <line x1="3125" y1="248" x2="3125" y2="488" stroke="#c49e78" stroke-width="3"/>
-    ${vol(`circle cx="3114" cy="370" r="5"`, "#f3e7c9")}${vol(`circle cx="3136" cy="370" r="5"`, "#f3e7c9")}
+    <rect x="3058" y="246" width="134" height="244" rx="6" fill="#8c6a4c"/>
+    <rect x="3064" y="262" width="122" height="5" rx="2.5" fill="#d9c3a3"/>
+    ${roupaNoCabide(3086, "vestido", "#f2b630")}${roupaNoCabide(3125, "pijama", "#6aa8e8")}${roupaNoCabide(3164, "fada", "#3fb3a5")}
+    <g class="porta-armario-e">${vol(`rect x="3050" y="236" width="75" height="264" rx="10"`, "#dcb894", "volSuave")}${vol(`circle cx="3114" cy="370" r="5"`, "#f3e7c9")}</g>
+    <g class="porta-armario-d">${vol(`rect x="3125" y="236" width="75" height="264" rx="10"`, "#d6b18b", "volSuave")}${vol(`circle cx="3136" cy="370" r="5"`, "#f3e7c9")}</g>
     ${vol(`rect x="3044" y="228" width="162" height="14" rx="5"`, "#c9a47e", "cil")}</g>`;
+  // planta
+  s += `<g data-coisa="planta">${sombraNoChao(3234, 36)}
+    ${vol(`path d="M3210 446 L3258 446 L3251 500 L3217 500 Z"`, "#c98a6e", "volSuave")}
+    ${vol(`path d="M3234 446 C3204 410 3196 376 3214 358 C3222 392 3230 410 3234 446 Z"`, "#7fae6a")}
+    ${vol(`path d="M3234 446 C3256 402 3274 376 3266 350 C3248 376 3240 410 3234 446 Z"`, "#8fb97a")}
+    ${vol(`path d="M3234 446 C3228 404 3236 368 3240 342 C3248 376 3246 410 3234 446 Z"`, "#86b072")}</g>`;
   // tapete redondo
   s += `<ellipse cx="3470" cy="516" rx="150" ry="18" fill="#e9d2cf"/>`;
   // cama com colcha de crochê
@@ -383,6 +453,7 @@ function desenharQuarto() {
     <rect x="3280" y="320" width="380" height="182" fill="#fff" fill-opacity="0"/>
     ${vol(`rect x="3290" y="330" width="42" height="170" rx="16"`, "#b98458", "volSuave")}
     ${vol(`rect x="3608" y="398" width="40" height="102" rx="14"`, "#b98458", "volSuave")}
+    ${profundidade(3310, 448, 320, 34, "#c48f62", 12)}
     ${vol(`rect x="3310" y="448" width="320" height="34" rx="10"`, "#c48f62", "volSuave")}
     ${vol(`ellipse cx="3376" cy="414" rx="44" ry="20"`, "#ffffff")}
     ${vol(`path d="M3340 420 L3620 420 L3620 470 Q3480 482 3340 470 Z"`, "#f6eedc", "volSuave")}
@@ -392,6 +463,7 @@ function desenharQuarto() {
   s += `<g data-coisa="abajur">${sombraNoChao(3730, 46)}
     <rect x="3680" y="330" width="100" height="172" fill="#fff" fill-opacity="0"/>
     <circle class="luz-abajur" cx="3730" cy="380" r="120" fill="url(#luzJanela)"/>
+    ${profundidade(3690, 432, 80, 68, "#c48f62", 10)}
     ${vol(`rect x="3690" y="432" width="80" height="68" rx="8"`, "#c48f62", "volSuave")}
     <rect x="3698" y="458" width="64" height="4" fill="#a87d56" fill-opacity=".6"/>
     ${vol(`circle cx="3730" cy="474" r="4"`, "#f3e7c9")}
@@ -400,7 +472,21 @@ function desenharQuarto() {
   return s;
 }
 
-/* A casa inteira (só as partes que não mudam durante o jogo) */
+/* Uma roupinha pendurada; tocar nela veste a Manu */
+function roupaNoCabide(x, roupa, cor) {
+  const corpo = roupa === "pijama"
+    ? vol(`path d="M${x - 15} 290 L${x + 15} 290 L${x + 17} 330 L${x + 12} 380 L${x + 2} 380 L${x} 340 L${x - 2} 380 L${x - 12} 380 L${x - 17} 330 Z"`, cor, "volSuave") +
+      `<circle cx="${x - 6}" cy="${306}" r="2.5" fill="#fff" fill-opacity=".8"/><circle cx="${x + 7}" cy="${322}" r="2.5" fill="#fff" fill-opacity=".8"/><circle cx="${x - 7}" cy="${354}" r="2.5" fill="#fff" fill-opacity=".8"/>`
+    : vol(`path d="M${x - 13} 290 L${x + 13} 290 L${x + 15} 312 L${x + 26} ${roupa === "fada" ? 360 : 352} L${x - 26} ${roupa === "fada" ? 360 : 352} L${x - 15} 312 Z"`, cor, "volSuave") +
+      (roupa === "fada" ? `<g fill="#e9e0ff" fill-opacity=".85"><ellipse cx="${x - 20}" cy="300" rx="12" ry="8"/><ellipse cx="${x + 20}" cy="300" rx="12" ry="8"/></g><polygon points="${pontosEstrela(x, 336, 5)}" fill="#fff"/>`
+        : `<circle cx="${x - 8}" cy="330" r="2" fill="${escurecer(cor, .25)}"/><circle cx="${x + 6}" cy="338" r="2" fill="${escurecer(cor, .25)}"/><circle cx="${x - 2}" cy="320" r="2" fill="${escurecer(cor, .25)}"/>`);
+  return `<g data-roupa="${roupa}">
+    <rect x="${x - 20}" y="262" width="40" height="124" fill="#fff" fill-opacity="0"/>
+    <path d="M${x} 264 q-5 -1 -4 6 M${x - 14} 288 L${x} 274 L${x + 14} 288" stroke="#cfc3b0" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    ${corpo}</g>`;
+}
+
+/* A casa inteira (só as partes que não mudam durante o jogo; o céu longe e as plantas da frente são camadas à parte) */
 function desenharCasa(fichas) {
   return desenharCeuEChao() + desenharTelhado() + desenharParedes() + desenharQuintal() +
     desenharSala(fichas) + desenharCozinha() + desenharQuarto() + desenharEstrutura();

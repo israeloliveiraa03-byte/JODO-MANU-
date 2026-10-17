@@ -54,6 +54,19 @@ const ITENS = {
     d: () => `${vol('path d="M-28 0 C-32 -24 -14 -34 0 -34 C14 -34 32 -24 28 0 Z"', "#d9a05a")}
       <path d="M-14 -28 Q-10 -18 -14 -10 M0 -32 Q4 -20 0 -10 M14 -28 Q18 -18 14 -10" stroke="#f3d29a" stroke-width="3.5" fill="none" stroke-linecap="round"/>`,
   },
+  bolo: {
+    nome: "bolo", tipo: "comida",
+    d: () => `${vol('ellipse cx="0" cy="-3" rx="30" ry="6"', "#f1ece2")}
+      ${vol('rect x="-24" y="-34" width="48" height="30" rx="8"', "#e2b07a", "volSuave")}
+      ${vol('path d="M-25 -30 Q-25 -40 -14 -40 L14 -40 Q25 -40 25 -30 q-6 8 -12 0 q-6 8 -12 0 q-6 8 -12 0 q-6 8 -12 0 Z"', "#fff3ec", "volSuave")}
+      ${vol('circle cx="0" cy="-44" r="5"', "#e4574b")}`,
+  },
+  picole: {
+    nome: "picolé", tipo: "comida",
+    d: () => `<rect x="-3.5" y="-16" width="7" height="16" rx="3" fill="#e2c49a"/>
+      ${vol('rect x="-12" y="-52" width="24" height="38" rx="11"', "#f39ab6", "volSuave")}
+      <path d="M-12 -30 Q0 -24 12 -30 L12 -26 Q0 -20 -12 -26 Z" fill="#fbd3e0"/>`,
+  },
   bola: {
     nome: "bola", tipo: "brinquedo",
     d: () => `${vol('circle cx="0" cy="-24" r="24"', "#f08a7e")}

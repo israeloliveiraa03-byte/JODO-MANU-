@@ -19,6 +19,10 @@ A ideia completa, o que a criança aprende e o plano da sala dos primos estão e
   A cama também faz a noite chegar, e a galinha faz amanhecer.
 - O botão de tela cheia esconde a barra do navegador. Se a criança sair dela sem querer, o próximo toque volta.
   O botão "voltar" do celular não tira ninguém da casa.
+- Muita coisa abre e fecha, com som: geladeira e congelador (tem picolé), forno (tem bolo), armário da pia,
+  guarda-roupa (tocar numa roupa veste a Manu), baú, janelas e a porta da frente, que abre sozinha.
+- As pessoas sentem: piscam, olham para as coisas, ficam surpresas, riem, fazem carinho, bocejam de noite
+  e dançam quando o rádio toca.
 - Para sair, segure a casinha no canto por 1 segundo.
 
 **Dica para travar o celular:** no Android, use "Fixar app" (Configurações → Segurança). No iPhone, onde a tela cheia

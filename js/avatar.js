@@ -82,27 +82,38 @@ function franja(cor, risca = true) {
   return s;
 }
 
-function olhoAberto(x, e, tam = 1, cilios = false) {
+/* Um olho aberto. A parte colorida fica num grupo "pupila" (o jogo move esse grupo
+   para a personagem OLHAR para as coisas) e a "pálpebra" desce de vez em quando (piscar). */
+function olhoAberto(x, e, tam = 1, cilios = false, sono = false) {
   const y = -236, t = v => n1(v * tam);
   let s = `<ellipse cx="${x}" cy="${y}" rx="${t(11)}" ry="${t(12.5)}" fill="#fff"/>`;
+  s += `<g class="pupila">`;
   s += `<circle cx="${x}" cy="${y + 1}" r="${t(8.6)}" fill="${e.corOlhos}"/>`;
   s += `<circle cx="${x}" cy="${y + 1}" r="${t(8.6)}" fill="url(#iris)"/>`;
   s += `<circle cx="${x}" cy="${y + 1}" r="${t(4.4)}" fill="#120a06"/>`;
   s += `<circle cx="${n1(x + 3 * tam)}" cy="${n1(y - 3.5 * tam)}" r="${t(3.3)}" fill="#fff"/>`;
   s += `<circle cx="${n1(x - 3 * tam)}" cy="${n1(y + 4.5 * tam)}" r="${t(1.6)}" fill="#fff" fill-opacity=".85"/>`;
+  s += `</g>`;
+  if (sono) {
+    // olho de sono: a pálpebra fica a meio caminho
+    s += `<path d="M${n1(x - 12.2 * tam)} ${n1(y + 1)} Q${x} ${n1(y - 27 * tam)} ${n1(x + 12.2 * tam)} ${n1(y + 1)} Q${x} ${n1(y + 4 * tam)} ${n1(x - 12.2 * tam)} ${n1(y + 1)} Z" fill="${e.pele}"/>`;
+    s += `<path d="M${n1(x - 11 * tam)} ${y} Q${x} ${n1(y + 3 * tam)} ${n1(x + 11 * tam)} ${y}" stroke="#2a1a14" stroke-width="2.8" fill="none" stroke-linecap="round"/>`;
+    return s;
+  }
   s += `<path d="M${n1(x - 11.5 * tam)} ${n1(y - 3 * tam)} Q${x} ${n1(y - 24 * tam)} ${n1(x + 11.5 * tam)} ${n1(y - 3 * tam)}" stroke="#2a1a14" stroke-width="2.8" fill="none" stroke-linecap="round"/>`;
   if (cilios) {
     const lado = x < 0 ? -1 : 1;
     s += `<path d="M${n1(x + lado * 10 * tam)} ${n1(y - 8 * tam)} l${lado * 6} -5 M${n1(x + lado * 5 * tam)} ${n1(y - 12 * tam)} l${lado * 4} -6" stroke="#2a1a14" stroke-width="2.6" stroke-linecap="round"/>`;
   }
+  s += `<ellipse class="palpebra" cx="${x}" cy="${n1(y - 1)}" rx="${t(12.6)}" ry="${t(14)}" fill="${e.pele}"/>`;
   return s;
 }
 
 const OLHOS = {
-  redondos:   { nome: "Redondos",   d: e => olhoAberto(-19, e) + olhoAberto(19, e) },
-  cilios:     { nome: "Com cílios", d: e => olhoAberto(-19, e, 1, true) + olhoAberto(19, e, 1, true) },
-  brilhantes: { nome: "Brilhantes", d: e => olhoAberto(-20, e, 1.18) + olhoAberto(20, e, 1.18) +
-                  `<polygon points="${pontosEstrela(-14, -243, 3.5)}" fill="#fff"/><polygon points="${pontosEstrela(26, -243, 3.5)}" fill="#fff"/>` },
+  redondos:   { nome: "Redondos",   d: (e, k = 1, sono) => olhoAberto(-19, e, k, false, sono) + olhoAberto(19, e, k, false, sono) },
+  cilios:     { nome: "Com cílios", d: (e, k = 1, sono) => olhoAberto(-19, e, k, true, sono) + olhoAberto(19, e, k, true, sono) },
+  brilhantes: { nome: "Brilhantes", d: (e, k = 1, sono) => olhoAberto(-20, e, 1.18 * k, false, sono) + olhoAberto(20, e, 1.18 * k, false, sono) +
+                  (sono ? "" : `<g class="pupila"><polygon points="${pontosEstrela(-14, -243, 3.5)}" fill="#fff"/><polygon points="${pontosEstrela(26, -243, 3.5)}" fill="#fff"/></g>`) },
   sorrindo:   { nome: "Sorrindo",   d: () => `<path d="M-30 -232 Q-19 -247 -8 -232 M8 -232 Q19 -247 30 -232" stroke="#2a1a14" stroke-width="4.2" fill="none" stroke-linecap="round"/>` },
 };
 
@@ -116,16 +127,43 @@ const BOCAS = {
   surpresa: { nome: "Uau!",     d: () => `<ellipse cx="0" cy="-205" rx="7" ry="9" fill="#6b2323"/><ellipse cx="0" cy="-201" rx="4.5" ry="3.5" fill="#ef7f8a"/>` },
 };
 
-function rosto(e) {
-  const pele = e.pele, sombra = escurecer(pele, .3), sobr = escurecer(e.corCabelo, .15);
+/* ---------- 3b. As emoções ----------
+   O rosto muda conforme o que acontece no jogo. "feliz" é o jeito escolhido no ateliê;
+   as outras emoções trocam olhos, sobrancelhas, boca e bochechas por um tempinho. */
+const EMOCOES = ["feliz", "alegre", "rindo", "surpresa", "carinho", "sono", "curiosa", "atenta"];
+
+function sobrancelhas(e, dyE = 0, dyD = 0, jeito = "") {
+  const cor = escurecer(e.corCabelo, .15);
+  let d = `M-29 ${-259 + dyE} Q-19 ${-265 + dyE} -9 ${-260 + dyE} M9 ${-260 + dyD} Q19 ${-265 + dyD} 29 ${-259 + dyD}`;
+  if (jeito === "preocupada") d = `M-29 -258 Q-20 -261 -9 -267 M9 -267 Q20 -261 29 -258`;
+  return `<path d="${d}" stroke="${cor}" stroke-width="4.6" fill="none" stroke-linecap="round"/>`;
+}
+
+function expressao(e, emocao = "feliz") {
+  const olhosDela = (k, sono) => e.olhos === "sorrindo" && !sono && k === 1 ? OLHOS.sorrindo.d(e) : OLHOS[e.olhos === "sorrindo" ? "redondos" : e.olhos].d(e, k, sono);
+  let olhos = OLHOS[e.olhos].d(e), sob = sobrancelhas(e), boca = BOCAS[e.boca].d(e), rubor = .3;
+  switch (emocao) {
+    case "alegre":   sob = sobrancelhas(e, -3, -3); boca = BOCAS.risada.d(e); rubor = .42; break;
+    case "rindo":    olhos = OLHOS.sorrindo.d(e); sob = sobrancelhas(e, -4, -4); boca = BOCAS.risada.d(e); rubor = .5; break;
+    case "surpresa": olhos = olhosDela(1.14); sob = sobrancelhas(e, -9, -9); boca = BOCAS.surpresa.d(e); break;
+    case "carinho":  olhos = OLHOS.sorrindo.d(e); sob = sobrancelhas(e, -1, -1); boca = BOCAS.sorriso.d(e); rubor = .58; break;
+    case "sono":     olhos = olhosDela(1, true); sob = sobrancelhas(e, 3, 3);
+                     boca = `<ellipse cx="0" cy="-205" rx="6" ry="7.5" fill="#6b2323"/>`; rubor = .2; break;
+    case "curiosa":  sob = sobrancelhas(e, -8, 1);
+                     boca = `<path d="M-7 -208 Q3 -201 12 -210" stroke="${escurecer(e.pele, .55)}" stroke-width="3.4" fill="none" stroke-linecap="round"/>`; break;
+    case "atenta":   sob = sobrancelhas(e, 0, 0, "preocupada");
+                     boca = `<path d="M-8 -206 Q0 -203 8 -206" stroke="${escurecer(e.pele, .55)}" stroke-width="3.4" fill="none" stroke-linecap="round"/>`; break;
+  }
+  const bochechas = `<ellipse cx="-32" cy="-215" rx="10" ry="7" fill="#e8706a" fill-opacity="${rubor}"/><ellipse cx="32" cy="-215" rx="10" ry="7" fill="#e8706a" fill-opacity="${rubor}"/>`;
+  return bochechas + olhos + sob + boca;
+}
+
+function rosto(e, emocao) {
+  const pele = e.pele, sombra = escurecer(pele, .3);
   let s = vol(`circle cx="-53" cy="-232" r="11"`, pele) + vol(`circle cx="53" cy="-232" r="11"`, pele);
   s += vol(`ellipse cx="0" cy="-238" rx="54" ry="56"`, pele);
-  s += `<ellipse cx="-32" cy="-215" rx="10" ry="7" fill="#e8706a" fill-opacity=".3"/><ellipse cx="32" cy="-215" rx="10" ry="7" fill="#e8706a" fill-opacity=".3"/>`;
   s += `<ellipse cx="0" cy="-223" rx="6.5" ry="5" fill="${sombra}" fill-opacity=".4"/><ellipse cx="-1.5" cy="-225" rx="2.6" ry="1.8" fill="#fff" fill-opacity=".4"/>`;
-  s += OLHOS[e.olhos].d(e);
-  s += `<path d="M-29 -259 Q-19 -265 -9 -260 M9 -260 Q19 -265 29 -259" stroke="${sobr}" stroke-width="4.6" fill="none" stroke-linecap="round"/>`;
-  s += BOCAS[e.boca].d(e);
-  return s;
+  return s + `<g class="expressao">${expressao(e, emocao)}</g>`;
 }
 
 /* ---------- 4. Os cabelos ----------
@@ -459,7 +497,7 @@ function desenharAvatar(ficha, opcoes = {}) {
   s += `<g transform="translate(42 -180) rotate(-12)"><g class="braco">${braco(e, roupa, true, comp)}</g></g>`;
   s += vol(`rect x="-10" y="-200" width="20" height="22" rx="8"`, e.pele, "cil");
   s += roupa.frente(e.corRoupa, e, alt);
-  s += rosto(e);
+  s += rosto(e, opcoes.emocao);
   if (e.adulto) s += `<path d="M-22 -214 q-4 6 -1 11 M22 -214 q4 6 1 11" stroke="${escurecer(e.pele, .35)}" stroke-opacity=".5" stroke-width="2" fill="none" stroke-linecap="round"/>`;
   s += BARBAS[e.barba].d(e);
   s += cab.frente(e.corCabelo);
