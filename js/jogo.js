@@ -122,20 +122,147 @@ function criarPessoa(id) {
   document.getElementById("g-pessoas").insertAdjacentHTML("beforeend", `
     <g class="pessoa" id="p-${id}" data-pessoa="${id}">
       <ellipse cx="0" cy="0" rx="${ficha.adulto ? 36 : 30}" ry="6" fill="url(#sombraChao)"/>
-      <g class="vira"><g class="bob">${desenharAvatar(ficha, { sombra: false })}</g></g>
+      <g class="vira"><g class="bob"><g class="pose">${desenharAvatar(ficha, { sombra: false })}</g></g>${COBERTA}</g>
+      <g class="zzz"><text x="0" y="0">z</text><text x="16" y="-22">z</text><text x="34" y="-46">z</text></g>
     </g>`);
   p.el = document.getElementById("p-" + id);
   p.elVira = p.el.querySelector(".vira");
   p.el.style.setProperty("--atraso", (-Math.random() * 5).toFixed(2) + "s"); // cada um pisca num tempo
   if (p.emocao && p.emocao !== "feliz") mostrarEmocao(p, p.emocao);
+  if (p.deitada) p.el.classList.add("deitada");
   gente[id] = p;
   posicionar(p);
 }
 
 function posicionar(p) {
   const k = p.escala || ESCALA_PESSOA;
+  if (p.deitada) return posicionarNaCama(p, k);
   p.el.setAttribute("transform", `translate(${n1(p.x)} ${MUNDO.piso})`);
   p.elVira.setAttribute("transform", `scale(${p.dir * k} ${k})`);
+}
+
+/* ---------- Deitar na cama ----------
+   A cama é 3D e fica lá no fundo do quarto; a Manu é 2D e vive na "folha" da frente.
+   Para ela parecer deitada EM CIMA do colchão, usamos a mesma conta da perspectiva:
+   o que está mais longe aparece menor e mais perto do centro da tela.
+   Quanto menor? Na proporção D / (D + distância até lá no fundo). */
+const COBERTA = `<g class="coberta">
+  <rect x="-66" y="-172" width="132" height="182" rx="22" fill="#f6eedc"/>
+  ${[[-34, -140, "#f2c2b6"], [0, -140, "#bfd8c4"], [34, -140, "#f3dc9a"], [-17, -100, "#c8d3ea"], [17, -100, "#f2c2b6"],
+     [-34, -60, "#f3dc9a"], [0, -60, "#c8d3ea"], [34, -60, "#bfd8c4"], [-17, -20, "#f2c2b6"], [17, -20, "#f3dc9a"]]
+     .map(([x, y, c]) => `<circle cx="${x}" cy="${y}" r="11" fill="${c}"/><circle cx="${x}" cy="${y}" r="3.5" fill="#fffaf0"/>`).join("")}
+  <rect x="-66" y="-172" width="132" height="18" rx="9" fill="#efe2c8"/>
+</g>`;
+const NA_CAMA = { x: 3548, y: 404, z: -150 }; // onde fica o meio do corpo dela, deitada (z: fundo do quarto)
+function posicionarNaCama(p, k) {
+  const f = D_CAM / (D_CAM - NA_CAMA.z);
+  const cx = cam.x + cam.vw / 2, cy = cam.y + cam.vh / 2;
+  const x = cx + (NA_CAMA.x - cx) * f, y = cy + (NA_CAMA.y - cy) * f;
+  p.el.setAttribute("transform", `translate(${n1(x)} ${n1(y)})`);
+  // deitada: o corpo gira 90 graus, com a cabeça no travesseiro (à esquerda)
+  p.elVira.setAttribute("transform", `rotate(-90) scale(${(k * f).toFixed(3)})`);
+  // o "zzz" sai de cima da cabeça (que, deitada, fica à esquerda)
+  p.el.querySelector(".zzz").setAttribute("transform", `translate(${n1(-250 * k * f)} ${n1(-80 * k * f)}) scale(${(k * f * 3).toFixed(2)})`);
+}
+function deitar() {
+  const manu = gente.manu;
+  manu.alvo = null; manu.aoChegar = null;
+  manu.el.classList.remove("agachada", "pulando", "dancando");
+  manu.deitada = true;
+  manu.el.classList.add("deitada");
+  clearTimeout(manu.timerEmocao);
+  manu.emocao = "dormindo";
+  mostrarEmocao(manu, "dormindo");
+  posicionar(manu);
+  SONS.colchao();
+}
+// devolve true se ela estava deitada (e levantou)
+function levantar() {
+  const manu = gente.manu;
+  if (!manu.deitada) return false;
+  manu.deitada = false;
+  manu.el.classList.remove("deitada");
+  manu.x = COISAS.cama + 60;
+  manu.dir = 1;
+  posicionar(manu);
+  SONS.colchao();
+  animar(manu, "pulinho", 650);
+  manu.emocao = "feliz";
+  sentir("manu", "alegre", 1800);
+  return true;
+}
+// acordar de verdade: se for de noite, o dia chega
+function acordarManu() {
+  levantar();
+  if (noite) return mudarCeu(false);
+  dizer("narrador", "acorda");
+}
+async function deitarNaCama() {
+  deitar();
+  if (noite) {
+    if ((await dizer("narrador", "deita")) === false || !gente.manu.deitada) return;
+    await esperar(600);
+    if (gente.manu.deitada) dizer("vovo", "boaNoite");
+    return;
+  }
+  // de dia, deitar na cama faz a noite chegar devagar (como era antes)
+  if ((await dizer("narrador", "soneca")) === false) return;
+  await esperar(1500);
+  if (gente.manu.deitada && !noite) mudarCeu(true);
+}
+
+/* ---------- Agachar e pular ----------
+   Movimentos do corpo que a criança pode imitar de verdade, no chão da sala:
+   "abaixa... e levanta!", "pula! um, dois, três!". Contar os pulos ensina os números. */
+let pulos = 0, ultimoPulo = 0, timerAgacha;
+function pararParaMexer(manu) {
+  if (levantar()) return true;
+  manu.alvo = null; manu.aoChegar = null;
+  ++toqueAtual; // cancela o que um toque anterior ainda ia fazer
+  return false;
+}
+function pular() {
+  const manu = gente.manu;
+  if (pararParaMexer(manu) || manu.pulando) return;
+  clearTimeout(timerAgacha);
+  manu.el.classList.remove("agachada");
+  manu.pulando = true;
+  animar(manu, "pulando", 900);
+  setTimeout(() => { manu.pulando = false; }, 860);
+  setTimeout(SONS.pulo, 140);
+  setTimeout(SONS.pouso, 700);
+  sentir("manu", "alegre", 1600);
+  const agora = performance.now();
+  pulos = agora - ultimoPulo < 2800 && pulos < 10 ? pulos + 1 : 1;
+  ultimoPulo = agora;
+  dizer("narrador", "pulos", pulos);
+  // quem está perto pula junto (e no terceiro pulo, comenta)
+  for (const id of ["vovo", "vovoo"]) {
+    const p = gente[id];
+    if (p.ocupado || p.alvo !== null || Math.abs(p.x - manu.x) > 600) continue;
+    setTimeout(() => { animar(p, "pulando", 900); sentir(id, "rindo", 1600); }, 220 + (id === "vovo" ? 0 : 140));
+    if (pulos === 3) setTimeout(() => dizer(id, "pulo"), 1000);
+  }
+  if (Math.abs(cao.x - manu.x) < 500 && !cao.ocupado) setTimeout(() => animarEl(cao.el, "feliz", 1300), 200);
+}
+function agachar() {
+  const manu = gente.manu;
+  if (pararParaMexer(manu) || manu.pulando) return;
+  clearTimeout(timerAgacha);
+  manu.el.classList.add("agachada");
+  SONS.abaixa();
+  sentir("manu", "curiosa", 1800);
+  olhar("manu", manu.x + manu.dir * 40, MUNDO.piso);
+  dizer("narrador", "abaixa");
+  // lá embaixo, se tiver algo no chão bem pertinho, ela pega
+  const perto = !naMao("manu") && itensEm("chao").find(i => Math.abs(i.x - manu.x) < 70);
+  if (perto) setTimeout(() => { if (manu.el.classList.contains("agachada")) { pegar(perto); dizerNome(perto.tipo); } }, 600);
+  timerAgacha = setTimeout(() => {
+    manu.el.classList.remove("agachada");
+    SONS.levanta();
+    sentir("manu", "alegre", 1400);
+    if (!perto) dizer("narrador", "levanta");
+  }, 1700);
 }
 
 /* O cachorro Caramelo: anda pelo quintal como as pessoas, mas no tamanho dele */
@@ -215,6 +342,7 @@ const telaXY = (x, y) => [cam.rect.left + (x - cam.x) * cam.s, cam.rect.top + (y
 
 /* ---------- 5. Andar ---------- */
 function irAte(p, x, aoChegar) {
+  if (p.id === "manu") { levantar(); clearTimeout(timerAgacha); p.el.classList.remove("agachada"); }
   x = limitar(x, MUNDO.inicio + 60, MUNDO.largura - 60);
   if (Math.abs(x - p.x) < 6) { p.alvo = null; p.aoChegar = null; aoChegar && aoChegar(); return; }
   p.alvo = x;
@@ -260,7 +388,7 @@ function mostrarEmocao(p, emocao) {
 }
 function sentir(id, emocao, ms = 2200) {
   const p = gente[id];
-  if (!p) return;
+  if (!p || p.deitada) return; // quem está dormindo não muda de cara
   p.emocao = emocao;
   mostrarEmocao(p, emocao);
   clearTimeout(p.timerEmocao);
@@ -446,6 +574,12 @@ function aoTocar(ev) {
   const elPessoa = t.closest("[data-pessoa]");
   if (elPessoa && y > 445 && itemPerto(45)) return tocarItem(itemPerto(45), valeAinda);
   const do3D = () => tem3D ? tocar3D(ev.clientX, ev.clientY, cam.rect) : null;
+  // dormindo: tocar nela (ou na cama) acorda; tocar em outra coisa faz ela levantar e ir até lá
+  if (gente.manu.deitada) {
+    const t3 = elPessoa ? null : do3D();
+    if (elPessoa?.dataset.pessoa === "manu" || (t3 && t3.valor === "cama")) return acordarManu();
+    levantar();
+  }
   let el2d = t.closest("[data-item],[data-coisa]");
   if (elPessoa) {
     if (elPessoa.dataset.pessoa !== "manu" || naMao("manu")) return tocarPessoa(elPessoa.dataset.pessoa, valeAinda);
@@ -730,8 +864,9 @@ function tocarCoisa(nome, valeAinda, info = {}) {
         dizer("vovo", "quente");
       });
 
-    case "cama":
-      return chegar(COISAS.cama, () => mudarCeu(!noite)); // a cama faz a noite chegar (e acordar)
+    case "cama": // deita na cama (e, de dia, a noite chega); deitada, tocar de novo acorda
+      if (manu.deitada) return acordarManu();
+      return chegar(COISAS.cama, deitarNaCama);
 
     case "abajur":
       return chegar(COISAS.abajur - 60, () => {
@@ -944,6 +1079,7 @@ let noite = false, vezDoCeu = 0;
 async function mudarCeu(paraNoite) {
   if (paraNoite === noite) return;
   noite = paraNoite;
+  if (!noite) levantar(); // de manhã, quem dormia levanta
   const vez = ++vezDoCeu, ainda = () => vez === vezDoCeu;
   svg.classList.toggle("e-noite", noite);
   document.getElementById("ceu").dataset.noite = noite ? "sim" : "";
@@ -1007,6 +1143,9 @@ svg.addEventListener("pointerup", () => { if (querTelaCheia && podeTelaCheia && 
 function prenderVoltarDoCelular() { try { history.pushState({ casa: true }, ""); } catch (e) {} }
 addEventListener("popstate", () => { if (inicio.hidden) prenderVoltarDoCelular(); });
 
+const botoesCorpo = document.getElementById("corpo");
+document.getElementById("pular").addEventListener("click", pular);
+document.getElementById("agachar").addEventListener("click", agachar);
 document.getElementById("ceu").addEventListener("click", () => { SONS.clique(); mudarCeu(!noite); });
 
 /* ---------- 9. A bolsinha (guarda coisas para levar pela casa) ---------- */
@@ -1059,6 +1198,7 @@ function relogio(agora) {
   posicionarBalao();
 
   const manu = gente.manu;
+  if (manu.deitada) posicionar(manu); // deitada no fundo do quarto: acompanha a perspectiva
   // a porta da frente abre quando alguém (ou o Caramelo) passa por ela
   const perto = [...Object.values(gente), cao].some(p => Math.abs(p.x - 1000) < 120);
   if (tem3D && perto !== aberto3D("porta")) { porta3D(perto); SONS.rangido(); }
@@ -1160,6 +1300,7 @@ document.getElementById("entrar").addEventListener("click", async () => {
   voltar.hidden = false;
   botaoBolsa.hidden = false;
   document.getElementById("ceu").hidden = false;
+  botoesCorpo.hidden = false;
   atualizarBotaoTela();
   requestAnimationFrame(() => { medirTela(); sininho(); });
   if (noite) grilos(true);
@@ -1175,6 +1316,7 @@ function irParaInicio() {
   botaoBolsa.hidden = true;
   bandeja.hidden = true;
   document.getElementById("ceu").hidden = true;
+  botoesCorpo.hidden = true;
   inicio.hidden = false;
   atualizarBotaoTela();
   desenharFamilia();

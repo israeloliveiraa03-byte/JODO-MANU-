@@ -16,6 +16,10 @@ A ideia completa, o que a criança aprende e o plano da sala dos primos estão e
 - Com algo na mão, toque na geladeira, na fruteira ou no baú para guardar. O lugar certo brilha de leve.
 - Toque na vovó ou no vovô: com a mão vazia, ganha um abraço; com algo na mão, entrega, e a pessoa leva até o lugar certo.
 - A bolsinha (canto de baixo) guarda coisas para levar pela casa.
+- Os dois botões do canto de baixo, à direita, mexem o corpo: **agachar** ("abaixa... e levanta!"; se tiver algo
+  no chão pertinho, ela pega) e **pular** (a voz conta os pulos: um, dois, três... até dez; quem está perto pula junto).
+- Toque na cama e a Manu **deita**, de olhinhos fechados e coberta com a colcha de crochê. De dia, a noite chega.
+  Toque nela (ou na cama) para acordar; se for noite, amanhece.
 - Toque na própria Manu para soltar o que ela está segurando.
 - No quintal: o Caramelo (cachorro) busca a bola se a Manu estiver com ela; o pato nada no açude; a asa-branca
   e o galo-de-campina voam; a cabrita Mimosa bale; o calango corre do lajedo; a rede balança.

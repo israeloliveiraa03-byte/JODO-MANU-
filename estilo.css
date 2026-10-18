@@ -73,6 +73,38 @@ button:focus-visible { outline: 3px solid var(--acento); outline-offset: 3px; }
 @keyframes abraco { 30%, 70% { transform: rotate(8deg); } }
 @keyframes pulinho { 35% { transform: translateY(-26px); } 70% { transform: translateY(0) scale(1.03, .97); } }
 
+/* --- movimentos do corpo: agachar, pular, deitar --- */
+.pessoa .pose { transform-box: fill-box; transform-origin: 50% 100%; transition: transform .35s ease; }
+.pessoa .perna { transition: transform .35s ease; }
+/* agachar: o corpo desce e as pernas dobram (encolhem e abrem um pouquinho), com os pés no chão */
+.agachada .pose { transform: translateY(58px); }
+.agachada .perna-e { transform: rotate(18deg) scaleY(.42); }
+.agachada .perna-d { transform: rotate(-18deg) scaleY(.42); }
+/* pular: prepara (encolhe), sobe esticada, desce e amortece. A sombra no chão diminui lá no alto */
+.pulando .pose { animation: pulo .9s ease-in-out; }
+.pulando .perna { animation: pernaPulo .9s ease-in-out; }
+.pulando .braco { animation: bracoPulo .9s ease-in-out; }
+.pessoa > ellipse { transform-box: fill-box; transform-origin: center; }
+.pulando > ellipse { animation: sombraPulo .9s ease-in-out; }
+@keyframes pulo {
+  0%, 100% { transform: none; }
+  18% { transform: scale(1.06, .88); }
+  50% { transform: translateY(-150px) scale(.96, 1.05); }
+  80% { transform: scale(1.06, .92); }
+}
+@keyframes pernaPulo { 50% { transform: scaleY(.82); } }
+@keyframes bracoPulo { 35%, 60% { transform: rotate(-150deg); } }
+@keyframes sombraPulo { 50% { transform: scale(.55); opacity: .5; } }
+/* deitada: sem sombra no chão, com a colcha por cima e um "zzz" que sobe bem devagar */
+.coberta, .zzz { display: none; }
+.deitada .coberta, .deitada .zzz { display: inline; }
+.deitada > ellipse { display: none; }
+.deitada .bob { animation: respira 3.4s ease-in-out infinite; }
+.zzz text { font: 800 16px var(--fonte); fill: #dfe5fb; stroke: #8a94b8; stroke-width: 1.2px; paint-order: stroke; opacity: 0; animation: zzz 4.5s ease-in-out infinite; }
+.zzz text:nth-child(2) { animation-delay: 1.5s; }
+.zzz text:nth-child(3) { animation-delay: 3s; }
+@keyframes zzz { 0% { opacity: 0; transform: translateY(8px); } 30%, 60% { opacity: .85; } 100% { opacity: 0; transform: translateY(-10px); } }
+
 .braco { transform-box: fill-box; transform-origin: 50% 5%; }
 .acenando .braco { animation: acena 1.6s ease-in-out; }
 @keyframes acena {
@@ -318,6 +350,26 @@ button:focus-visible { outline: 3px solid var(--acento); outline-offset: 3px; }
   font: 800 13px/22px var(--fonte);
   text-align: center;
 }
+/* botões de agachar e pular, no canto de baixo à direita */
+.botoes-corpo {
+  position: fixed;
+  right: calc(env(safe-area-inset-right, 0px) + 14px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+  z-index: 6;
+  display: flex;
+  gap: 10px;
+}
+.botoes-corpo[hidden] { display: none; }
+.botoes-corpo button {
+  width: 58px; height: 58px;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 30%, #fff, #f3ece2);
+  box-shadow: 0 6px 16px rgba(47, 42, 69, .16);
+  display: grid; place-items: center;
+}
+.botoes-corpo svg { width: 42px; height: 42px; }
+.botoes-corpo button:active { transform: scale(.94); }
 #bolsa.recebeu { animation: pulinho .5s ease-out; }
 .bandeja {
   position: fixed;

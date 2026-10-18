@@ -213,6 +213,11 @@ const SONS = {
   janela:  () => { chiado(0, .35, .03, { f: 2400, ate: 900, q: 1.2 }); tom("sine", .3, .08, [[0, 600], [1, 420]], .03); },
   forno:   () => { tom("triangle", 0, .3, [[0, 110], [1, 80]], .08); chiado(0, .05, .05, { f: 900 }); },
   brilho:  () => { [880, 1175, 1480, 1760].forEach((f, i) => tom("sine", i * .08, .35, [[0, f], [1, f]], .035)); },
+  pulo:    () => tom("sine", 0, .24, [[0, 300], [1, 640]], .045),
+  pouso:   () => { tom("sine", 0, .14, [[0, 170], [1, 70]], .08); chiado(0, .05, .03, { f: 500, tipo: "lowpass" }); },
+  abaixa:  () => tom("sine", 0, .3, [[0, 440], [1, 250]], .035),
+  levanta: () => tom("sine", 0, .3, [[0, 250], [1, 440]], .035),
+  colchao: () => { chiado(0, .35, .03, { f: 420, tipo: "lowpass" }); tom("sawtooth", .05, .4, [[0, 160], [.5, 200], [1, 175]], .015, { f: 900, q: 6 }); },
   bocejo:  (k = 1) => { tom("sine", 0, 1.1, [[0, 420 * k], [.3, 520 * k], [1, 260 * k]], .045, { f: 900 * k, tipo: "lowpass" }); chiado(0, 1, .015, { f: 700, tipo: "lowpass" }); },
 
   // bichos do sertão

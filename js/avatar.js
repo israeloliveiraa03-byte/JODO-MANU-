@@ -149,6 +149,10 @@ function expressao(e, emocao = "feliz") {
     case "carinho":  olhos = OLHOS.sorrindo.d(e); sob = sobrancelhas(e, -1, -1); boca = BOCAS.sorriso.d(e); rubor = .58; break;
     case "sono":     olhos = olhosDela(1, true); sob = sobrancelhas(e, 3, 3);
                      boca = `<ellipse cx="0" cy="-205" rx="6" ry="7.5" fill="#6b2323"/>`; rubor = .2; break;
+    case "dormindo": // olhos fechados, sobrancelhas relaxadas, boquinha tranquila
+                     olhos = [-19, 19].map(x => `<path d="M${x - 11} -235 Q${x} -228 ${x + 11} -235" stroke="#2a1a14" stroke-width="3" fill="none" stroke-linecap="round"/>`).join("");
+                     sob = sobrancelhas(e, 4, 4);
+                     boca = `<path d="M-6 -206 Q0 -202 6 -206" stroke="${escurecer(e.pele, .55)}" stroke-width="3.2" fill="none" stroke-linecap="round"/>`; rubor = .4; break;
     case "curiosa":  sob = sobrancelhas(e, -8, 1);
                      boca = `<path d="M-7 -208 Q3 -201 12 -210" stroke="${escurecer(e.pele, .55)}" stroke-width="3.4" fill="none" stroke-linecap="round"/>`; break;
     case "atenta":   sob = sobrancelhas(e, 0, 0, "preocupada");

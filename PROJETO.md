@@ -49,7 +49,8 @@ de céu aberto, sol forte, chão de terra clara e plantas que sabem guardar águ
 
 - **Nomes das coisas.** Ao pegar um objeto, uma voz diz o nome dele ("Manga!").
 - **Cada coisa no seu lugar.** Comida na geladeira, fruta na fruteira, brinquedo no baú.
-- **Contar.** Quando uma fruta vai para a fruteira, a vovó conta quantas tem.
+- **Contar.** Quando uma fruta vai para a fruteira, a vovó conta quantas tem. Cada pulo também é contado.
+- **O próprio corpo.** Agachar e levantar, pular, deitar e acordar: "em cima" e "embaixo", imitando a Manu.
 - **Cuidado e higiene.** Lavar a fruta antes de comer; o fogão "tá quentinho".
 - **Afeto e convivência.** Abraçar, entregar coisas, ouvir histórias da família.
 
@@ -111,6 +112,8 @@ Serviços com plano gratuito que fazem isso bem: Firebase (Google) ou Supabase. 
 - **Cenário em 3D**: casa em corte com perspectiva de verdade, móveis com volume e sombreamento de desenho,
   sol com sombras, nuvens e morros ao fundo, jardim na frente, lâmpadas que acendem à noite e vaga-lumes.
   Portas, tampas e janelas giram nas dobradiças. As pessoas e os bichos continuam em 2D por cima da cena.
+- Movimentos do corpo: agachar, pular (com a contagem dos pulos, e a família pulando junto) e deitar na cama
+  para dormir. São movimentos que a criança imita de verdade, no chão, enquanto brinca.
 - **Identidade da caatinga** em todo o cenário, nos bichos, nos sons (baião, cabrita, calango, asa-branca)
   e nas falas da família (veja a seção acima).
 - Emoções: as pessoas piscam, olham para o que acontece e mudam o rosto (alegre, rindo, surpresa, carinho,

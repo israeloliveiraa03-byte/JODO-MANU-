@@ -42,6 +42,7 @@ const FALAS = {
     rede:      ["Balança, balança, minha fulô.", "Rede é bom pra descansar."],
     picole:    ["Picolé! Mas só um, hein?", "Que geladinho!"],
     pijama:    ["Isso! Pijama para dormir.", "Que pijama lindo, meu amor."],
+    pulo:      ["Pula, pula, minha fulô!", "Vamos pular juntas!"],
     // de noite
     noite:     ["Já está de noite! Hora de pôr o pijama.", "Olha a lua lá fora, meu amor!"],
     boaNoite:  ["Boa noite, minha netinha. Dorme com os anjinhos.", "Sonha com coisa boa, viu?"],
@@ -70,6 +71,7 @@ const FALAS = {
     mandacaru: ["Quando o mandacaru flora, a chuva tá chegando.", "O mandacaru guarda água dentro dele."],
     chapeu:    ["Meu chapéu de couro! Protege do sol do sertão.", "Esse chapéu é do vovô!"],
     rede:      ["Balança a rede, minha fulô!"],
+    pulo:      ["O vovô também pula!", "Eita, que pulo arretado!"],
     noite:     ["Boa noite, princesa!", "Ih, já escureceu. Hora de dormir!"],
     boaNoite:  ["Dorme bem, minha princesa.", "Amanhã a gente brinca mais, tá?"],
     bomDia:    ["Bom dia, flor do dia!", "Bom dia! O galo já cantou!"],
@@ -100,6 +102,11 @@ const FALAS = {
     cisterna:  ["A cisterna guarda a água da chuva!"],
     rede:      ["Que rede gostosa!"],
     mandacaru: ["Olha o mandacaru!"],
+    // contar os pulos (1, 2, 3...) e os movimentos do corpo
+    pulos:     n => ["", "Um!", "Dois!", "Três!", "Quatro!", "Cinco!", "Seis!", "Sete!", "Oito!", "Nove!", "Dez! Que pulão!"][n],
+    abaixa:    ["Abaixa...", "Agachou!", "Lá embaixo!"],
+    levanta:   ["E levanta!", "Lá em cima!"],
+    deita:     ["Deitou na caminha!", "Shhh... a Manu vai dormir."],
     caoVolta:  ["Muito bem, Caramelo!", "Ele trouxe a bola!"],
   },
 };
